@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title id="pageTitle">Prompt Title</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    article {
+      max-width: 600px;
+      margin: auto;
+      display: block;
+    }
+    body {
+      font-family: Arial, sans-serif;
+      padding: 30px;
+      text-align: center;
+    }
+    .story {
+      margin: 30px auto;
+      max-width: 600px;
+      font-size: 18px;
+      line-height: 1.6;
+      background-color: #ffffff;
+      padding: 20px;
+      border-radius: 10px;
+    }
+    .button-group {
+      margin-top: 30px;
+    }
+    #customDisplay {
+      margin-bottom: 30px;
+      font-size: 16px;
+      line-height: 1.5;
+    }
+    
+    #copyBuffer {
+      position: absolute;
+      left: -9999px;
+    }
+  </style>
+</head>
+<body class="prompt">
+<article>
+  <h2 id="promptTitle" class="prompt">Prompt Title</h2>
+  <p>By Tenshilove</p>
+
+  <div id="customDisplay"></div>
+  <button onclick="goToFix()" class="storyButton">Fix Parameters</button>
+  <button onclick="goToPage('home.html')" class="storyButton">To Index</button>
+
+  <div class="story">
+    <div id="storyBox"></div>
+    <button onclick="copyStory()" class="storyButton">Copy Story</button>
+  </div>
+
+  <div id="storyContainer"></div>
+  <div id="storyDisplay"></div>
+  <textarea id="copyBuffer"></textarea>
+</article>
+
+<script>
+  const params = new URLSearchParams(window.location.search);
+
+  const requiredFields = [
+    "PregnantName", "PregnantSheHeThey", "PregnantHerHimThem",
+    "PregnantHerHisTheir", "PregnantHersHisTheirs",
+    "OtherName", "OtherSheHeThey", "OtherHerHimThem",
+    "OtherHerHisTheir", "OtherHersHisTheirs"
+  ];
+
+  const missing = requiredFields.filter(field => !params.get(field));
+  if (missing.length > 0) {
+    window.location.href = `fix.html?${params.toString()}`;
+  }
+
+  const lc = str => (str || "").toLowerCase();
+  const cap = str => (str || "").charAt(0).toUpperCase() + str.slice(1);
+
+  const PregnantName = cap(lc(params.get("PregnantName")));
+  const PregnantSheHeThey = lc(params.get("PregnantSheHeThey"));
+  const PregnantHerHimThem = lc(params.get("PregnantHerHimThem"));
+  const PregnantHerHisTheir = lc(params.get("PregnantHerHisTheir"));
+  const PregnantHersHisTheirs = lc(params.get("PregnantHersHisTheirs"));
+
+  const OtherName = cap(lc(params.get("OtherName")));
+  const OtherSheHeThey = lc(params.get("OtherSheHeThey"));
+  const OtherHerHimThem = lc(params.get("OtherHerHimThem"));
+  const OtherHerHisTheir = lc(params.get("OtherHerHisTheir"));
+  const OtherHersHisTheirs = lc(params.get("OtherHersHisTheirs"));
+
+  let PregnantIsAre = "is", PregnantWasWere = "was", PregnantHasHave = "has", PregnantDoesDo = "does";
+  let OtherIsAre = "is", OtherWasWere = "was", OtherHasHave = "has", OtherDoesDo = "does";
+
+  if (PregnantSheHeThey === "they") {
+    PregnantIsAre = "are"; PregnantWasWere = "were"; PregnantHasHave = "have"; PregnantDoesDo = "do";
+  }
+  if (OtherSheHeThey === "they") {
+    OtherIsAre = "are"; OtherWasWere = "were"; OtherHasHave = "have"; OtherDoesDo = "do";
+  }
+
+
+
+  // ✅ Step 1: Insert your main prompt text here between the ``
+  const storyText = `Insert Prompt Text Here`.trim();
+  document.getElementById("storyBox").innerText = storyText;
+
+
+
+
+  // ✅ Step 2: Define your options in one place
+  // Each option has 3 things to fill in. Remove the code block for unused options.
+  // 1: fill in the "Option X" after the "label:" This will be what displays on the options buttons
+  // 2: fill in the text for the options in between the `` after the "response"
+  // 3: fill in the lowercase letter of the prompt the option leads to. Letters can be found on the image Ten made.
+  const options = {
+    "option1": {
+      label: "Option 1",
+      response: `Option 1 response here`,
+      next: "z"
+    }
+
+
+    ,"option2": {
+      label: "Option 2",
+      response: `Option 2 response here`,
+      next: "z"
+    }
+
+
+    ,"option3": {
+      label: "Option 3",
+      response: `Option 3 response here`,
+      next: "z"
+    }
+
+
+  };
+
+
+  const container = document.getElementById("storyContainer");
+  for (const key in options) {
+    const btn = document.createElement("button");
+    btn.className = "storyButton";
+    btn.textContent = options[key].label;
+    btn.onclick = () => showStory(key);
+    container.appendChild(btn);
+  }
+
+  // ✅ Step 3: Insert the Prompt Title: Conception, Happy, Promotion, etc
+  const promptTitle = "Your Prompt Title Here";
+
+  
+  document.getElementById("pageTitle").innerText = promptTitle;
+  document.getElementById("promptTitle").innerText = promptTitle;
+
+
+  const displayHTML = `
+    <strong>Carrying Parent Name:</strong> ${PregnantName}<br>
+    <strong>Pronouns:</strong> 
+      ${PregnantSheHeThey} /
+      ${PregnantHerHimThem} /
+      ${PregnantHerHisTheir} /
+      ${PregnantHersHisTheirs}<br>
+    <strong>Other Parent Name:</strong> ${OtherName}<br>
+    <strong>Pronouns:</strong> 
+      ${OtherSheHeThey} /
+      ${OtherHerHimThem} /
+      ${OtherHerHisTheir} /
+      ${OtherHersHisTheirs}
+  `;
+  document.getElementById("customDisplay").innerHTML = displayHTML;
+
+  function goToFix() {
+    window.location.href = `fix.html?${params.toString()}`;
+  }
+
+  function goToPage(page) {
+    window.location.href = `${page}?${params.toString()}`;
+  }
+
+  function copyStory() {
+    const story = document.getElementById("storyBox").innerText;
+    navigator.clipboard.writeText(story)
+      .then(() => alert("Story copied to clipboard!"))
+      .catch(err => {
+        alert("Failed to copy story.");
+        console.error(err);
+      });
+  }
+
+  function copyFromBuffer() {
+    const buffer = document.getElementById("copyBuffer");
+    buffer.select();
+    buffer.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(buffer.value)
+      .then(() => alert("Story copied to clipboard!"))
+      .catch(err => {
+        alert("Failed to copy.");
+        console.error(err);
+      });
+  }
+
+  function showStory(key) {
+    const option = options[key];
+    if (!option) return;
+
+    document.getElementById("copyBuffer").value = option.response;
+
+    document.getElementById("storyDisplay").innerHTML = `
+      <p class="story"><strong>${option.label} path:</strong><br>${option.response.replace(/\n/g, '<br>')}</p>
+      <button class="storyButton" onclick="copyFromBuffer()">Copy ${option.label}</button>
+      <button class="storyButton" onclick="goToPage('${option.next}.html')">Continue ${option.label}</button>
+    `;
+  }
+</script>
+</body>
+</html>

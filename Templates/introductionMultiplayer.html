@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title id="pageTitle">Multiplayer Prompt</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 30px;
+      text-align: center;
+      background: #e3dba2;
+      color: #967e00;
+    }
+    .storyButton {
+      margin: 5px;
+      padding: 8px 12px;
+      font-size: 14px;
+      border: 2px solid #967e00;
+      background: #faf1ab;
+      color: #967e00;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    .storyButton:hover {
+      background: #ffffff;
+    }
+    article {
+      max-width: 1000px;
+      margin: auto;
+    }
+    #customDisplay {
+      margin: 20px auto;
+      font-size: 16px;
+      line-height: 1.4;
+      background: #faf4c7;
+      padding: 15px;
+      border-radius: 8px;
+      border: 2px solid #967e00;
+      text-align: left;
+    }
+    .story {
+      margin: 30px auto;
+      max-width: 1000px;
+      font-size: 18px;
+      line-height: 1.6;
+      background-color: #ffffff;
+      padding: 20px;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body class="prompt">
+<article>
+  <h2 id="promptTitle">Your Prompt Title Here</h2>
+  <p>By Tenshilove</p>
+
+  <div id="customDisplay"></div>
+  <button class="storyButton" onclick="goToFix()">Fix Parameters</button>
+  <button class="storyButton" onclick="goToPage('index')">To Index</button>
+
+  <div class="story">
+    <div id="storyBox"></div>
+    <button class="storyButton" onclick="copyStory()">Copy Story</button>
+  </div>
+
+  <!-- REPLACED: single button linking to a.html with all params -->
+  <button class="storyButton" onclick="goToPage('a')">Continue</button>
+</article>
+
+<script>
+  // 0) pull URL params
+  const params = new URLSearchParams(window.location.search);
+
+  // 1) simple casing helpers
+  const lc  = s => (s||"").toLowerCase();
+  const cap = s => (s||"")[0]?.toUpperCase() + (s||"").slice(1);
+
+  // 2) pronounSet → flat keys your template expects
+  function pronounSet(subj) {
+    subj = lc(subj);
+    switch (subj) {
+      case "she":  return { HeSheThey:"she",  HimHerThem:"her",  HisHerTheir:"her",  HisHersTheirs:"hers", WasWere:"was",  DoesDo:"does",  HasHave:"has" };
+      case "he":   return { HeSheThey:"he",   HimHerThem:"him",  HisHerTheir:"his",  HisHersTheirs:"his", WasWere:"was",  DoesDo:"does",  HasHave:"has" };
+      case "they": return { HeSheThey:"they", HimHerThem:"them",HisHerTheir:"their",HisHersTheirs:"theirs",WasWere:"were", DoesDo:"do",   HasHave:"have" };
+      default:     return { HeSheThey:"it",   HimHerThem:"it",   HisHerTheir:"its", HisHersTheirs:"its", WasWere:"was",  DoesDo:"does",  HasHave:"has" };
+    }
+  }
+
+  // 3) ensure we got all params
+  const required = [];
+  for (let i = 1; i <= 4; i++) {
+    required.push(
+      `Player${i}Name`,
+      `Player${i}HeSheThey`,
+      `Player${i}Class`,
+      `Player${i}Weapon`,
+      `Player${i}Damage`
+    );
+  }
+  if (required.some(k => !params.get(k))) {
+    window.location.href = `fix.html?${params}`;
+  }
+
+  // 4) define globals for Player1…Player4 and build players[]
+  const players = [];
+  for (let i = 1; i <= 4; i++) {
+    const rawName  = params.get(`Player${i}Name`)     || "";
+    const rawPron  = params.get(`Player${i}HeSheThey`)|| "";
+    const rawClass = params.get(`Player${i}Class`)    || "";
+    const rawWeap  = params.get(`Player${i}Weapon`)   || "";
+    const rawDmg   = params.get(`Player${i}Damage`)   || "";
+
+    const Name      = cap(lc(rawName));
+    const HeSheThey = lc(rawPron);
+    const Class     = cap(lc(rawClass));
+    const Weapon    = cap(lc(rawWeap));
+    const Damage    = lc(rawDmg);
+
+    const pfx       = pronounSet(HeSheThey);
+
+    window[`Player${i}Name`]          = Name;
+    window[`Player${i}HeSheThey`]     = pfx.HeSheThey;
+    window[`Player${i}HimHerThem`]    = pfx.HimHerThem;
+    window[`Player${i}HisHerTheir`]   = pfx.HisHerTheir;
+    window[`Player${i}HisHersTheirs`] = pfx.HisHersTheirs;
+    window[`Player${i}WasWere`]       = pfx.WasWere;
+    window[`Player${i}DoesDo`]        = pfx.DoesDo;
+    window[`Player${i}HasHave`]       = pfx.HasHave;
+    window[`Player${i}Class`]         = Class;
+    window[`Player${i}Weapon`]        = Weapon;
+    window[`Player${i}Damage`]        = Damage;
+
+    players.push({Name, HeSheThey, Class, Weapon, Damage});
+  }
+
+  // 5) render the top summary
+  document.getElementById("customDisplay").innerHTML =
+    players.map((p, i) =>
+      `<strong>Player ${i+1}:</strong> ${p.Name} — <em>${p.HeSheThey}</em> | Class: ${p.Class} | Weapon: ${p.Weapon} | Damage: ${p.Damage}`
+    ).join("<br>");
+
+  // 6) story injection
+  const storyText = `
+"This place looks awful," ${Player1Name} murmured,
+${Player1HisHerTheir} voice hushed, the usual boisterous energy in
+${Player1HisHerTheir} tone replaced by a somber note.
+${cap(Player1HisHerTheir)} hand instinctively went to
+${Player1HisHerTheir} ${Player1Weapon}, a gesture of protective readiness.
+  `.trim();
+  document.getElementById("storyBox").innerText = storyText;
+
+  // 7) title sync + navigation helpers + copyStory
+  const title = "Your Prompt Title Here";
+  document.getElementById("pageTitle").innerText   = title;
+  document.getElementById("promptTitle").innerText = title;
+
+  function goToFix()    { window.location.href = `fix.html?${params}`; }
+  function goToPage(pg){ window.location.href = `${pg}.html?${params}`; }
+
+  function copyStory(){
+    navigator.clipboard.writeText(storyText)
+      .then(() => alert("Story copied!"))
+      .catch(() => alert("Copy failed."));
+  }
+</script>
+</body>
+</html>

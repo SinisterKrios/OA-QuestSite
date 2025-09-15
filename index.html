@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Enter Player Info</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #e3dba2;
+      color: #967e00;
+      margin: 20px auto;
+      max-width: 1000px;
+      text-align: center;
+    }
+    .column-wrapper {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 20px;
+    }
+    .player-column {
+      display: none;
+      flex: 1;
+      min-width: 200px;
+      background: #faf4c7;
+      padding: 15px;
+      border: 2px solid #967e00;
+      border-radius: 8px;
+    }
+    .player-column h3 {
+      margin-top: 0;
+      margin-bottom: 10px;
+      color: #e48198;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+      box-sizing: border-box;
+      border: 1px solid #967e00;
+      border-radius: 4px;
+      background: #faf1ab;
+      color: #967e00;
+      font-size: 14px;
+    }
+    button {
+      font-size: 16px;
+      border: 2px solid #967e00;
+      cursor: pointer;
+    }
+    button:disabled {
+      background: #ddd;
+      color: #999;
+      border-color: #ccc;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+    button:hover:enabled {
+      background: #fff;
+    }
+    .submitButton {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+<article>
+  <h2>Enter Player Information</h2>
+  <p>Select a mode, then fill out the required fields.</p>
+
+  <label for="modeSelect"><strong>Mode:</strong></label>
+  <select id="modeSelect">
+    <option value="">-- Select Mode --</option>
+    <option value="singleplayer">Single Player</option>
+    <option value="multiplayer">Multiplayer</option>
+  </select>
+
+  <div class="column-wrapper">
+    <!-- Player 1 -->
+    <div class="player-column" id="player1">
+      <h3>Player 1</h3>
+      <input type="text" id="Player1Name"    placeholder="Name">
+      <select    id="Player1Pronoun">
+        <option value="">Pronoun</option>
+        <option value="she">she</option>
+        <option value="he">he</option>
+        <option value="they">they</option>
+        <option value="it">it</option>
+      </select>
+      <input type="text" id="Player1Class"   placeholder="Class">
+      <input type="text" id="Player1Weapon"  placeholder="Weapon">
+      <input type="text" id="Player1Damage"  placeholder="Damage">
+    </div>
+
+    <!-- Player 2 -->
+    <div class="player-column" id="player2">
+      <h3>Player 2</h3>
+      <input type="text" id="Player2Name"    placeholder="Name">
+      <select    id="Player2Pronoun">
+        <option value="">Pronoun</option>
+        <option value="she">she</option>
+        <option value="he">he</option>
+        <option value="they">they</option>
+        <option value="it">it</option>
+      </select>
+      <input type="text" id="Player2Class"   placeholder="Class">
+      <input type="text" id="Player2Weapon"  placeholder="Weapon">
+      <input type="text" id="Player2Damage"  placeholder="Damage">
+    </div>
+
+    <!-- Player 3 -->
+    <div class="player-column" id="player3">
+      <h3>Player 3</h3>
+      <input type="text" id="Player3Name"    placeholder="Name">
+      <select    id="Player3Pronoun">
+        <option value="">Pronoun</option>
+        <option value="she">she</option>
+        <option value="he">he</option>
+        <option value="they">they</option>
+        <option value="it">it</option>
+      </select>
+      <input type="text" id="Player3Class"   placeholder="Class">
+      <input type="text" id="Player3Weapon"  placeholder="Weapon">
+      <input type="text" id="Player3Damage"  placeholder="Damage">
+    </div>
+
+    <!-- Player 4 -->
+    <div class="player-column" id="player4">
+      <h3>Player 4</h3>
+      <input type="text" id="Player4Name"    placeholder="Name">
+      <select    id="Player4Pronoun">
+        <option value="">Pronoun</option>
+        <option value="she">she</option>
+        <option value="he">he</option>
+        <option value="they">they</option>
+        <option value="it">it</option>
+      </select>
+      <input type="text" id="Player4Class"   placeholder="Class">
+      <input type="text" id="Player4Weapon"  placeholder="Weapon">
+      <input type="text" id="Player4Damage"  placeholder="Damage">
+    </div>
+  </div>
+
+  <div class="submitButton">
+    <button id="submitBtn" disabled onclick="submitData()">Submit</button>
+  </div>
+</article>
+
+<script>
+  const modeSelect   = document.getElementById('modeSelect');
+  const submitBtn    = document.getElementById('submitBtn');
+  const totalPlayers = 4;
+  const uiFields     = ['Name','Pronoun','Class','Weapon','Damage'];
+  const players      = Array.from({length: totalPlayers},(_,i)=>i+1);
+
+  // 1) Show/hide
+  function applyMode() {
+    const mode = modeSelect.value;
+    players.forEach(i => {
+      const blk = document.getElementById(`player${i}`);
+      blk.style.display =
+        mode==='multiplayer' || (mode==='singleplayer' && i===1)
+          ? 'block'
+          : 'none';
+    });
+    checkInputs();
+  }
+
+  // 2) Validate
+  function checkInputs() {
+    const mode = modeSelect.value;
+    if (!mode) return submitBtn.disabled = true;
+
+    let valid = true;
+    if (mode==='singleplayer') {
+      uiFields.forEach(f => {
+        if (!document.getElementById(`Player1${f}`).value.trim())
+          valid = false;
+      });
+    } else {
+      players.forEach(i => {
+        uiFields.forEach(f => {
+          if (!document.getElementById(`Player${i}${f}`).value.trim())
+            valid = false;
+        });
+      });
+    }
+    submitBtn.disabled = !valid;
+  }
+
+  // 3) Submit & remap Pronoun → HeSheThey
+  function submitData() {
+    const mode   = modeSelect.value;
+    const params = new URLSearchParams();
+
+    const mapKey = f => f==='Pronoun' ? 'HeSheThey' : f;
+
+    if (mode==='singleplayer') {
+      uiFields.forEach(f => {
+        const paramName = `Player1${mapKey(f)}`;
+        const val       = document
+          .getElementById(`Player1${f}`)
+          .value.trim();
+        params.append(paramName, val);
+      });
+      window.location.href = `singleplayer/selection.html?${params}`;
+      return;
+    }
+
+    // multiplayer
+    players.forEach(i => {
+      uiFields.forEach(f => {
+        const paramName = `Player${i}${mapKey(f)}`;
+        const val       = document
+          .getElementById(`Player${i}${f}`)
+          .value.trim();
+        params.append(paramName, val);
+      });
+    });
+    window.location.href = `multiplayer/selection.html?${params}`;
+  }
+
+  // wire listeners
+  modeSelect.addEventListener('change', applyMode);
+  players.forEach(i => {
+    uiFields.forEach(f => {
+      const el = document.getElementById(`Player${i}${f}`);
+      el.addEventListener('input', checkInputs);
+      el.addEventListener('change', checkInputs);
+    });
+  });
+</script>
+</body>
+</html>

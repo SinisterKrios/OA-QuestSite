@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Edit Parental Info</title>
+<link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      padding-top: 0px;
+margin-top: 20px;
+	text-align: left;
+    }
+    h2 { color: #d04f7f; }
+    label {
+      font-weight: bold;
+      display: block;
+      margin-top: 10px;
+    }
+    input {
+      width: 100%;
+      padding: 6px;
+      margin-bottom: 8px;
+      box-sizing: border-box;
+      border: 2px solid #eb7c95;
+      border-radius: 6px;
+      background-color: #ffffff;
+    }
+    input.missing {
+      border-color: #d04f7f;
+      background-color: #ffffff;
+    }
+    button {
+border-radius: 10px; border: 5px solid #e48198; padding: 10px 20px; background: linear-gradient(to bottom, #ffd4a5, #ffa1b9); box-shadow: none; color:#ae0039;
+    }
+    button:hover {
+      background-color: #fdbcc8;
+    }
+  </style>
+</head>
+<body>
+<article style="max-width: 1000px; margin: auto; padding: 0px;">
+<div style="margin: auto; text-align: center; background: #ffe0ee; max-width: 1000px;"><img src="https://i.imgur.com/dUomAD5.png"></div>
+  <div style="padding-left: 15px; padding-right: 15px;"><h2 class="fixtitle">Update or Complete Your Parental Info</h2></div>
+<hr>
+<br>
+<p style="text-align: center;">If you didn't mean to come here, it's because one or more of the pieces of information is missing. <br> Please enter it before continuing. Thank you!</p>
+<br>
+
+  <form id="updateForm" style="margin: 25px;">
+    <!-- Inputs will be injected here -->
+  </form>
+
+  <div style="margin: auto; display: box; text-align: center;"><button onclick="submitUpdated()">Continue to Story</button></div>
+</article>
+
+  <script>
+    const fieldNames = [
+      "PregnantName", "PregnantSheHeThey", "PregnantHerHimThem",
+      "PregnantHerHisTheir", "PregnantHersHisTheirs",
+      "OtherName", "OtherSheHeThey", "OtherHerHimThem",
+      "OtherHerHisTheir", "OtherHersHisTheirs"
+    ];
+
+    const labelMap = {
+      PregnantName: "Carrying Parent Name",
+      PregnantSheHeThey: "Subject Pronoun (she/he/they)",
+      PregnantHerHimThem: "Object Pronoun (her/him/them)",
+      PregnantHerHisTheir: "Possessive Adjective (her/his/their)",
+      PregnantHersHisTheirs: "Possessive Pronoun (hers/his/theirs)",
+      OtherName: "Other Parent Name",
+      OtherSheHeThey: "Subject Pronoun (she/he/they)",
+      OtherHerHimThem: "Object Pronoun (her/him/them)",
+      OtherHerHisTheir: "Possessive Adjective (her/his/their)",
+      OtherHersHisTheirs: "Possessive Pronoun (hers/his/theirs)"
+    };
+
+    const params = new URLSearchParams(window.location.search);
+    const form = document.getElementById("updateForm");
+
+    // Build form inputs with custom labels
+    fieldNames.forEach(name => {
+      const value = params.get(name) || "";
+      const isMissing = value.trim() === "";
+      const labelText = labelMap[name] || name;
+
+      const label = `<label for="${name}">${labelText}</label>`;
+      const input = `<input type="text" id="${name}" name="${name}" value="${value}" class="${isMissing ? 'missing' : ''}">`;
+
+      form.innerHTML += label + input;
+    });
+
+    function submitUpdated() {
+      const newParams = new URLSearchParams();
+      let missingFields = [];
+
+      fieldNames.forEach(name => {
+        const input = document.getElementById(name);
+        const val = input.value.trim();
+
+        if (!val) {
+          missingFields.push(labelMap[name] || name);
+          input.classList.add("missing");
+        } else {
+          input.classList.remove("missing");
+          newParams.append(name, val);
+        }
+      });
+
+      if (missingFields.length > 0) {
+        alert("Please fill in all missing fields:\n" + missingFields.join(", "));
+        return;
+      }
+
+      // Redirect to next story page
+      window.location.href = `home.html?${newParams.toString()}`;
+    }
+  </script>
+</body>
+</html>
+

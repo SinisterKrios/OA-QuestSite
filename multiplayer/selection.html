@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Quest Selector</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 2em;
+    }
+    select, button {
+      font-size: 1em;
+      margin-top: 1em;
+    }
+  </style>
+</head>
+<body>
+  <h1>Select a Quest</h1>
+  <label for="questDropdown">Choose your quest:</label>
+  <select id="questDropdown">
+    <option value="">-- Select a quest --</option>
+    <option value="tainted_spring">Tainted Spring</option>
+  </select>
+
+  <br>
+  <button id="goButton" disabled>Begin Quest</button>
+
+  <script>
+    const dropdown = document.getElementById('questDropdown');
+    const button = document.getElementById('goButton');
+
+    // Parse current URL parameters
+    const currentParams = new URLSearchParams(window.location.search);
+
+    // Map quest values to their destination URLs
+    const questDestinations = {
+      tainted_spring: 'Tainted Spring/index.html',
+    };
+
+    dropdown.addEventListener('change', () => {
+      button.disabled = dropdown.value === '';
+    });
+
+    button.addEventListener('click', () => {
+      const selectedQuest = dropdown.value;
+      if (selectedQuest && questDestinations[selectedQuest]) {
+        const baseUrl = questDestinations[selectedQuest];
+        const newUrl = `${baseUrl}?${currentParams.toString()}`;
+        window.location.href = newUrl;
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Redirect with Params</title>
+</head>
+<body>
+  <button id="goButton">Go to Next Page</button>
+
+  <script>
+    document.getElementById('goButton').addEventListener('click', () => {
+      const params = window.location.search;
+      window.location.href = 'introduction.html' + params;
+    });
+  </script>
+</body>
+</html>
