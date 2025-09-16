@@ -63,6 +63,32 @@ article{
 input::placeholder {
   color: #9d9d9d;
 }
+article {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 10px;   /* match your mobile padding */
+}
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
+body {
+  box-sizing: border-box;    /* already set globally */
+  max-width: 1000px;         /* your desktop cap */
+  margin: 0 auto;            /* center on larger screens */
+  padding: 20px 10px;        /* give a little breathing room */
+}
+.container {
+  display: flex;
+  flex-wrap: wrap;         /* allow stacking */
+  justify-content: center; /* center when wrapped */
+  gap: 10px;               /* breathing room */
+  width: 100%;             /* never exceed the parent */
+}
 
     button {
 	color: #ffffff;
@@ -88,16 +114,22 @@ input::placeholder {
 	}
 
 @media (max-width: 600px) {
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 40%;
+}
   /* Make the article span the viewport */
   article {
-    max-width: 100%;
-    width: 100%;
+    max-width: 40%;
+    width: 40%;
     padding: 10px;    /* stay inside edges */
     margin: 0 auto;
   }
 
   /* Stack header images + text vertically */
   .container {
+    max-width: 40%;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -106,15 +138,18 @@ input::placeholder {
 
   /* Constrain or hide the GIFs so they don’t force overflow */
   .container img {
-    max-width: 80%;   /* or set to 100px */
+    max-width: 40%;   
     height: auto;
   }
+hr {
+    max-width: 40%;
+}
 
   /* Ensure your mode selector & buttons stay full-width */
   input,
   select,
   button {
-    width: 100%;
+    max-width: 40%;
     height: 44px;     /* comfortable tap target */
   }
 
@@ -125,9 +160,17 @@ input::placeholder {
   }
 
   .player-column {
-    width: 100%;
+    width: 40%;
     min-width: auto;
   }
+.container img {
+  max-width: 60px;  /* or use 20vw, whatever fits your design */
+  height: auto;
+}
+
+* {
+  outline: 1px solid red !important;
+}
 }
 
 
