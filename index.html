@@ -63,6 +63,26 @@ article{
 input::placeholder {
   color: #9d9d9d;
 }
+article {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 10px;   /* match your mobile padding */
+}
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  box-sizing: border-box;    /* already set globally */
+  max-width: 1000px;         /* your desktop cap */
+  margin: 0 auto;            /* center on larger screens */
+  padding: 20px 10px;        /* give a little breathing room */
+}
 
     button {
 	color: #ffffff;
@@ -128,6 +148,14 @@ input::placeholder {
     width: 100%;
     min-width: auto;
   }
+.container img {
+  max-width: 60px;  /* or use 20vw, whatever fits your design */
+  height: auto;
+}
+
+* {
+  outline: 1px solid red !important;
+}
 }
 
 
