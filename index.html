@@ -2,6 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Enter Player Info</title>
 <link rel="stylesheet" href="style.css">
   <style>
@@ -84,15 +85,40 @@ input::placeholder {
 	}
 
 @media (max-width: 600px) {
-article{
-	max-width: 500px;
+  /* make the wrapper a column, not a row */
+  .column-wrapper {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  /* each player card full-width */
+  .player-column {
+    min-width: auto;
+    width: 100%;
+  }
+
+  /* shrink overall container */
+  article {
+    max-width: 100%;
+    padding: 10px;
+  }
+
+  /* smaller type for mobile */
+  body, input, select, button, p {
+    font-size: 14px;
+  }
+
+  /* shrink or hide your side images */
+  .container img {
+    display: none; /* or `max-width: 40px; height: auto;` */
+  }
+
+  /* keep your inputs/buttons tappable */
+  input, select, button {
+    height: 44px;
+  }
 }
-input, select, button{
-	height: 40px;
-}
-.player-column{	
-}
-}
+
 
   </style>
 </head>
