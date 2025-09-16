@@ -3,11 +3,10 @@
 <head>
   <meta charset="utf-8">
   <title>Enter Player Info</title>
+<link rel="stylesheet" href="style.css">
   <style>
     body {
       font-family: Arial, sans-serif;
-      background-color: #e3dba2;
-      color: #967e00;
       margin: 20px auto;
       max-width: 1000px;
       text-align: center;
@@ -22,30 +21,49 @@
       display: none;
       flex: 1;
       min-width: 200px;
-      background: #faf4c7;
+      background: #303030;
       padding: 15px;
-      border: 2px solid #967e00;
+      border: 2px solid #676767;
       border-radius: 8px;
     }
     .player-column h3 {
       margin-top: 0;
       margin-bottom: 10px;
-      color: #e48198;
+      color: #9d9d9d;
     }
+	.player-column p{
+	color: #9d9d9d;
+}
     input, select, button {
       width: 100%;
       padding: 8px;
       margin-bottom: 10px;
       box-sizing: border-box;
-      border: 1px solid #967e00;
+      border: 1px solid #676767;
       border-radius: 4px;
-      background: #faf1ab;
-      color: #967e00;
+      background: #676767;
+      color: #9d9d9d;
       font-size: 14px;
     }
+input:not(:placeholder-shown) {
+      background: #676767;
+      color: #ffffff;
+}
+select:valid {
+  color: white;
+}
+
+article{
+      background-color: rgba(61, 61, 62, 0.9);
+}
+input::placeholder {
+  color: #9d9d9d;
+}
+
     button {
+	color: #ffffff;
       font-size: 16px;
-      border: 2px solid #967e00;
+      border: 2px solid #272727;
       cursor: pointer;
     }
     button:disabled {
@@ -56,19 +74,33 @@
       opacity: 0.6;
     }
     button:hover:enabled {
-      background: #fff;
+      background: #9d9d9d;
     }
     .submitButton {
       margin-top: 20px;
     }
+	p{
+		font-size: 13px;
+	}
+
   </style>
 </head>
 <body>
 <article>
-  <h2>Enter Player Information</h2>
-  <p>Select a mode, then fill out the required fields.</p>
+<div class="container">
+
+<img src="https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/i/71515031-3f45-4117-abcd-a4fc1856b7d7/d6501sy-73956cdd-e523-4ac3-9b77-6d2c6ca2bab7.gif">
+  <div>
+	<h2>Enter Player Information</h2>
+  <p style="font-size: 16px">Select a mode, then fill out the required fields.</p>
+</div>
+<img src="https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/i/71515031-3f45-4117-abcd-a4fc1856b7d7/d6501sy-73956cdd-e523-4ac3-9b77-6d2c6ca2bab7.gif">
+
+</div>
 
   <label for="modeSelect"><strong>Mode:</strong></label>
+	<hr>
+	<p style="margin: 0;">&nbsp;</p>
   <select id="modeSelect">
     <option value="">-- Select Mode --</option>
     <option value="singleplayer">Single Player</option>
@@ -79,65 +111,121 @@
     <!-- Player 1 -->
     <div class="player-column" id="player1">
       <h3>Player 1</h3>
-      <input type="text" id="Player1Name"    placeholder="Name">
-      <select    id="Player1Pronoun">
+	<p>&nbsp;</p>
+      <input type="text" id="Player1Name" placeholder="Name">
+      <select id="Player1Pronoun" required>
         <option value="">Pronoun</option>
         <option value="she">she</option>
         <option value="he">he</option>
         <option value="they">they</option>
         <option value="it">it</option>
       </select>
-      <input type="text" id="Player1Class"   placeholder="Class">
-      <input type="text" id="Player1Weapon"  placeholder="Weapon">
-      <input type="text" id="Player1Damage"  placeholder="Damage">
+      <select id="Player1Class" required>
+        <option value="">Class</option>
+        <option value="fighter">fighter</option>
+        <option value="healer">healer</option>
+        <option value="mage">mage</option>
+      </select>
+      <input type="text"
+             id="Player1Weapon"
+             placeholder="Weapon"
+             oninput="this.value = this.value.toLowerCase()">
+      <input type="number"
+             id="Player1Damage"
+             placeholder="Damage"
+             min="0"
+             step="1"
+             oninput="this.value = this.value.replace(/\D/g,''); if(this.value<0) this.value=0;">
     </div>
 
     <!-- Player 2 -->
     <div class="player-column" id="player2">
       <h3>Player 2</h3>
-      <input type="text" id="Player2Name"    placeholder="Name">
-      <select    id="Player2Pronoun">
+	<p>&nbsp;</p>
+      <input type="text" id="Player2Name" placeholder="Name">
+      <select id="Player2Pronoun" required>
         <option value="">Pronoun</option>
         <option value="she">she</option>
         <option value="he">he</option>
         <option value="they">they</option>
         <option value="it">it</option>
       </select>
-      <input type="text" id="Player2Class"   placeholder="Class">
-      <input type="text" id="Player2Weapon"  placeholder="Weapon">
-      <input type="text" id="Player2Damage"  placeholder="Damage">
+      <select id="Player2Class" required>
+        <option value="">Class</option>
+        <option value="fighter">fighter</option>
+        <option value="healer">healer</option>
+        <option value="mage">mage</option>
+      </select>
+      <input type="text"
+             id="Player2Weapon"
+             placeholder="Weapon"
+             oninput="this.value = this.value.toLowerCase()">
+      <input type="number"
+             id="Player2Damage"
+             placeholder="Damage"
+             min="0"
+             step="1"
+             oninput="this.value = this.value.replace(/\D/g,''); if(this.value<0) this.value=0;">
     </div>
 
     <!-- Player 3 -->
     <div class="player-column" id="player3">
       <h3>Player 3</h3>
-      <input type="text" id="Player3Name"    placeholder="Name">
-      <select    id="Player3Pronoun">
+	<p>Input player 1 if 2 players</p>
+      <input type="text" id="Player3Name" placeholder="Name">
+      <select id="Player3Pronoun" required>
         <option value="">Pronoun</option>
         <option value="she">she</option>
         <option value="he">he</option>
         <option value="they">they</option>
         <option value="it">it</option>
       </select>
-      <input type="text" id="Player3Class"   placeholder="Class">
-      <input type="text" id="Player3Weapon"  placeholder="Weapon">
-      <input type="text" id="Player3Damage"  placeholder="Damage">
+      <select id="Player3Class" required>
+        <option value="">Class</option>
+        <option value="fighter">fighter</option>
+        <option value="healer">healer</option>
+        <option value="mage">mage</option>
+      </select>
+      <input type="text"
+             id="Player3Weapon"
+             placeholder="Weapon"
+             oninput="this.value = this.value.toLowerCase()">
+      <input type="number"
+             id="Player3Damage"
+             placeholder="Damage"
+             min="0"
+             step="1"
+             oninput="this.value = this.value.replace(/\D/g,''); if(this.value<0) this.value=0;">
     </div>
 
     <!-- Player 4 -->
     <div class="player-column" id="player4">
       <h3>Player 4</h3>
-      <input type="text" id="Player4Name"    placeholder="Name">
-      <select    id="Player4Pronoun">
+	<p>Input player 2 if 2-3 players</p>
+      <input type="text" id="Player4Name" placeholder="Name">
+      <select id="Player4Pronoun" required>
         <option value="">Pronoun</option>
         <option value="she">she</option>
         <option value="he">he</option>
         <option value="they">they</option>
         <option value="it">it</option>
       </select>
-      <input type="text" id="Player4Class"   placeholder="Class">
-      <input type="text" id="Player4Weapon"  placeholder="Weapon">
-      <input type="text" id="Player4Damage"  placeholder="Damage">
+      <select id="Player4Class" required>
+        <option value="">Class</option>
+        <option value="fighter">fighter</option>
+        <option value="healer">healer</option>
+        <option value="mage">mage</option>
+      </select>
+      <input type="text"
+             id="Player4Weapon"
+             placeholder="Weapon"
+             oninput="this.value = this.value.toLowerCase()">
+      <input type="number"
+             id="Player4Damage"
+             placeholder="Damage"
+             min="0"
+             step="1"
+             oninput="this.value = this.value.replace(/\D/g,''); if(this.value<0) this.value=0;">
     </div>
   </div>
 
@@ -151,76 +239,70 @@
   const submitBtn    = document.getElementById('submitBtn');
   const totalPlayers = 4;
   const uiFields     = ['Name','Pronoun','Class','Weapon','Damage'];
-  const players      = Array.from({length: totalPlayers},(_,i)=>i+1);
+  const players      = Array.from({length: totalPlayers}, (_, i) => i + 1);
 
-  // 1) Show/hide
   function applyMode() {
     const mode = modeSelect.value;
     players.forEach(i => {
       const blk = document.getElementById(`player${i}`);
       blk.style.display =
-        mode==='multiplayer' || (mode==='singleplayer' && i===1)
+        mode === 'multiplayer' || (mode === 'singleplayer' && i === 1)
           ? 'block'
           : 'none';
     });
     checkInputs();
   }
 
-  // 2) Validate
   function checkInputs() {
     const mode = modeSelect.value;
-    if (!mode) return submitBtn.disabled = true;
-
+    if (!mode) {
+      submitBtn.disabled = true;
+      return;
+    }
     let valid = true;
-    if (mode==='singleplayer') {
+    if (mode === 'singleplayer') {
       uiFields.forEach(f => {
-        if (!document.getElementById(`Player1${f}`).value.trim())
+        if (!document.getElementById(`Player1${f}`).value.trim()) {
           valid = false;
+        }
       });
     } else {
       players.forEach(i => {
         uiFields.forEach(f => {
-          if (!document.getElementById(`Player${i}${f}`).value.trim())
+          if (!document.getElementById(`Player${i}${f}`).value.trim()) {
             valid = false;
+          }
         });
       });
     }
     submitBtn.disabled = !valid;
   }
 
-  // 3) Submit & remap Pronoun → HeSheThey
   function submitData() {
     const mode   = modeSelect.value;
     const params = new URLSearchParams();
+    const mapKey = f => (f === 'Pronoun' ? 'HeSheThey' : f);
 
-    const mapKey = f => f==='Pronoun' ? 'HeSheThey' : f;
-
-    if (mode==='singleplayer') {
+    if (mode === 'singleplayer') {
       uiFields.forEach(f => {
-        const paramName = `Player1${mapKey(f)}`;
-        const val       = document
-          .getElementById(`Player1${f}`)
-          .value.trim();
-        params.append(paramName, val);
+        const key = `Player1${mapKey(f)}`;
+        const val = document.getElementById(`Player1${f}`).value.trim();
+        params.append(key, val);
       });
       window.location.href = `singleplayer/selection.html?${params}`;
       return;
     }
 
-    // multiplayer
     players.forEach(i => {
       uiFields.forEach(f => {
-        const paramName = `Player${i}${mapKey(f)}`;
-        const val       = document
-          .getElementById(`Player${i}${f}`)
-          .value.trim();
-        params.append(paramName, val);
+        const key = `Player${i}${mapKey(f)}`;
+        const val = document.getElementById(`Player${i}${f}`).value.trim();
+        params.append(key, val);
       });
     });
     window.location.href = `multiplayer/selection.html?${params}`;
   }
 
-  // wire listeners
   modeSelect.addEventListener('change', applyMode);
   players.forEach(i => {
     uiFields.forEach(f => {
@@ -232,3 +314,4 @@
 </script>
 </body>
 </html>
+

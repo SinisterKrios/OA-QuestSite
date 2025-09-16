@@ -12,11 +12,18 @@
       background: #e3dba2;
       color: #967e00;
     }
-    .button-group {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      margin-top: auto;
+    .storyButton {
+      margin: 5px;
+      padding: 8px 12px;
+      font-size: 14px;
+      border: 2px solid #967e00;
+      background: #faf1ab;
+      color: #967e00;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    .storyButton:hover {
+      background: #ffffff;
     }
     article {
       max-width: 1000px;
@@ -41,66 +48,6 @@
       padding: 20px;
       border-radius: 10px;
     }
-    .storyButton {
-      margin: 5px;
-      padding: 8px 12px;
-      font-size: 14px;
-      border: 2px solid #967e00;
-      background: #faf1ab;
-      color: #967e00;
-      cursor: pointer;
-      border-radius: 4px;
-    }
-    .storyButton:hover {
-      background: #ffffff;
-    }
-    #copyBuffer {
-      position: absolute;
-      left: -9999px;
-    }
-    .option-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 20px;
-      margin-top: 30px;
-    }
-    .option-box {
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      background: #faf4c7;
-      border: 2px solid #967e00;
-      border-radius: 8px;
-      padding: 15px;
-      text-align: left;
-      min-height: 280px;
-    }
-    .option-box h3 {
-      margin-top: 0;
-      color: #e48198;
-    }
-    .option-box p {
-      margin: 8px 0;
-    }
-    .result-box {
-      display: none;
-      margin-top: 30px;
-      background: #ffffff;
-      border: 2px solid #967e00;
-      border-radius: 8px;
-      padding: 20px;
-      max-width: 600px;
-      margin-left: auto;
-      margin-right: auto;
-      text-align: left;
-    }
-    .result-box h3 {
-      margin-top: 0;
-      color: #e48198;
-    }
-    #resultActions {
-      margin: 15px 0;
-    }
   </style>
 </head>
 <body class="prompt">
@@ -117,15 +64,8 @@
     <button class="storyButton" onclick="copyStory()">Copy Story</button>
   </div>
 
-  <div class="option-grid" id="optionGrid"></div>
-
-  <div class="result-box" id="resultBox">
-    <h3 id="resultTitle"></h3>
-    <p id="resultText"></p>
-    <div id="resultActions"></div>
-  </div>
-
-  <textarea id="copyBuffer"></textarea>
+  <!-- REPLACED: single button linking to a.html with all params -->
+  <button class="storyButton" onclick="goToPage('a')">Continue</button>
 </article>
 
 <script>
@@ -140,42 +80,10 @@
   function pronounSet(subj) {
     subj = lc(subj);
     switch (subj) {
-      case "she":  return {
-        HeSheThey:     "she",
-        HimHerThem:    "her",
-        HisHerTheir:   "her",
-        HisHersTheirs: "hers",
-        WasWere:       "was",
-        DoesDo:        "does",
-        HasHave:       "has"
-      };
-      case "he":   return {
-        HeSheThey:     "he",
-        HimHerThem:    "him",
-        HisHerTheir:   "his",
-        HisHersTheirs: "his",
-        WasWere:       "was",
-        DoesDo:        "does",
-        HasHave:       "has"
-      };
-      case "they": return {
-        HeSheThey:     "they",
-        HimHerThem:    "them",
-        HisHerTheir:   "their",
-        HisHersTheirs: "theirs",
-        WasWere:       "were",
-        DoesDo:        "do",
-        HasHave:       "have"
-      };
-      default:     return {
-        HeSheThey:     "it",
-        HimHerThem:    "it",
-        HisHerTheir:   "its",
-        HisHersTheirs: "its",
-        WasWere:       "was",
-        DoesDo:        "does",
-        HasHave:       "has"
-      };
+      case "she":  return { HeSheThey:"she",  HimHerThem:"her",  HisHerTheir:"her",  HisHersTheirs:"hers", WasWere:"was",  DoesDo:"does",  HasHave:"has" };
+      case "he":   return { HeSheThey:"he",   HimHerThem:"him",  HisHerTheir:"his",  HisHersTheirs:"his", WasWere:"was",  DoesDo:"does",  HasHave:"has" };
+      case "they": return { HeSheThey:"they", HimHerThem:"them",HisHerTheir:"their",HisHersTheirs:"theirs",WasWere:"were", DoesDo:"do",   HasHave:"have" };
+      default:     return { HeSheThey:"it",   HimHerThem:"it",   HisHerTheir:"its", HisHersTheirs:"its", WasWere:"was",  DoesDo:"does",  HasHave:"has" };
     }
   }
 
@@ -194,14 +102,14 @@
     window.location.href = `fix.html?${params}`;
   }
 
-  // 4) define real globals for Player1…Player4
+  // 4) define globals for Player1…Player4 and build players[]
   const players = [];
   for (let i = 1; i <= 4; i++) {
-    const rawName  = params.get(`Player${i}Name`)    || "";
+    const rawName  = params.get(`Player${i}Name`)     || "";
     const rawPron  = params.get(`Player${i}HeSheThey`)|| "";
-    const rawClass = params.get(`Player${i}Class`)   || "";
-    const rawWeap  = params.get(`Player${i}Weapon`)  || "";
-    const rawDmg   = params.get(`Player${i}Damage`)  || "";
+    const rawClass = params.get(`Player${i}Class`)    || "";
+    const rawWeap  = params.get(`Player${i}Weapon`)   || "";
+    const rawDmg   = params.get(`Player${i}Damage`)   || "";
 
     const Name      = cap(lc(rawName));
     const HeSheThey = lc(rawPron);
@@ -209,9 +117,8 @@
     const Weapon    = cap(lc(rawWeap));
     const Damage    = lc(rawDmg);
 
-    const pfx = pronounSet(HeSheThey);
+    const pfx       = pronounSet(HeSheThey);
 
-    // expose as globals
     window[`Player${i}Name`]          = Name;
     window[`Player${i}HeSheThey`]     = pfx.HeSheThey;
     window[`Player${i}HimHerThem`]    = pfx.HimHerThem;
@@ -224,120 +131,100 @@
     window[`Player${i}Weapon`]        = Weapon;
     window[`Player${i}Damage`]        = Damage;
 
-    // also collect into players[] for the top display
     players.push({Name, HeSheThey, Class, Weapon, Damage});
   }
 
   // 5) render the top summary
   document.getElementById("customDisplay").innerHTML =
     players.map((p, i) =>
-      `<strong>Player ${i+1}:</strong> ${p.Name} — 
-       <em>${p.HeSheThey}</em> | Class: ${p.Class} | Weapon: ${p.Weapon} | Damage: ${p.Damage}`
+      `<strong>Player ${i+1}:</strong> ${p.Name} — <em>${p.HeSheThey}</em> | Class: ${p.Class} | Weapon: ${p.Weapon} | Damage: ${p.Damage}`
     ).join("<br>");
 
-  // 6) story injection now works
-  const storyText = `
-"This place looks awful," ${Player1Name} murmured,
-${Player1HisHerTheir} voice hushed, the usual boisterous energy in
-${Player1HisHerTheir} tone replaced by a somber note.
-${cap(Player1HisHerTheir)} hand instinctively went to
-${Player1HisHerTheir} ${Player1Weapon}, a gesture of protective readiness.
-  `.trim();
+  // 6) story injection
+  const storyText = `	The air hung heavy and still over Prariedale, a village nestled deep within the ancient forests of the Sage Kingdom. Sunlight, usually dappling through the canopy in playful streaks, seemed to struggle to pierce the gloom, casting the small cluster of homes in a perpetual twilight. It was into this sleepy village that ${Player1Name}, ${Player2Name}, ${Player3Name} and ${Player4Name}, a party of young adventurers brimming with a mix of youthful idealism and earnest determination, ventured into.
+
+
+
+They had journeyed for days, following the call of a quest request – a plea for help with a mysterious toxin tainting Prariedale’s water supply, leaving its inhabitants weak and sickly. As they came into the village, the silence was striking. No children’s laughter, no blacksmith’s clang, no cheerful chatter from the market square. Instead, a pervasive quiet, punctuated only by the mournful rustle of leaves and the occasional hacking cough from within one of the drab, timber-framed houses.
+
+
+
+The first person they saw was an old goat, shuffling slowly across the dusty path, his shoulders hunched, his skin pale and clammy. His eyes were sunken, betraying a profound weariness. He barely registered their presence, merely offered a weak, vacant stare before continuing his slow, laborious journey.
+
+
+
+"This place looks awful," ${Player1Name} murmured, ${Player1HisHerTheir} voice hushed, the usual boisterous energy in ${Player1HisHerTheir} tone replaced by a somber note. ${cap(Player1HisHerTheir)} hand instinctively went to ${Player1HisHerTheir} ${Player1Weapon}, a gesture of protective readiness.
+
+
+
+${Player2Name} nodded slowly, ${Player2HisHerTheir} brow furrowed with concern. ${cap(Player2HisHerTheir)} keen eyes swept over the faded paint on the houses, the neglected gardens, and the general air of desolation. "We have to help them." ${cap(Player2HisHerTheir)} empathy was palpable, already overriding ${Player2HisHerTheir} usual caution.
+
+
+
+A flicker of a thought crossed ${Player4Name}’s mind, a brief, unsettling question. "Do you think it could be contagious?" ${Player4HeSheThey} asked, glancing at ${Player4HisHerTheir} companion ${Player3Name}.
+
+
+
+${Player3Name}, with ${Player3HisHerTheir} bright, reassuring smile that hadn’t quite faded despite the dismal surroundings, shook ${Player3HisHerTheir} head gently. "No, I don't think so, ${Player4Name}. The quest scroll was quite specific. It's a problem with their water. We will be careful not to drink it, and we should be okay." ${cap(Player3HisHerTheir)} confidence, though slightly forced in the face of such widespread misery, was enough to soothe ${Player4Name}’s immediate fears. Prariedale needed their strength, not their apprehension.
+
+←—------------------- copy break—----------------->
+
+
+The sun dipped below the forest line, painting the sky in hues of bruised purple and orange. The Great Eye passed overhead, shining its magical light over them. They resisted the urge to look at it as they hurriedly traveled towards the village’s only tavern. "The Whispering Willow," the faded sign proclaimed, though the willow depicted looked more weeping than whispering. Inside, the usual boisterous clamor of a village inn was replaced by a heavy quiet. A few patrons sat hunched over half-empty tankards, their faces drawn and pale, their movements sluggish. There was no singing, no storytelling, no clinking of tankards in merriment. The air was thick with the scent of stale ale and illness.
+
+
+
+The innkeeper, a stout cow Aries whose rosy cheeks were now sallow, greeted them with a tired sigh, her voice raspy. "Welcome, travelers. We don't get many visitors these days. Food and bed, is it?"
+
+
+
+They declined the food, wary of the local food supply, opting instead to eat from the packed rations they had brought. The simple camp meals felt bland and heavy, a reflection of the pervasive gloom. They spoke in hushed tones, discussing their plan, their voices underscoring the unnatural silence of the tavern. Each creak of the floorboards, each distant cough, added to the oppressive atmosphere. It was a night more of restless observation than restful sleep, their youthful enthusiasm tempered by the stark reality of Prariedale's plight.
+
+As the first faint light of dawn filtered through the grimy tavern window, painting the dust motes in weak gold, they rose, feeling the unspoken urgency of their mission. Their breakfast was quick, their resolve hardened. Today, they would meet their quest giver.
+
+
+
+They found her in a small, rustic cottage on the outskirts of the village, surrounded by withered herb gardens. ${Player1Name} recognized the tell-tale signs of a seasoned alchemist, though even this skilled mage seemed unable to stem the tide of illness in her own village. The elder, a woman named Therin, was indeed frail, with one horn chipped and broken, and corruption spread haphazardly over one side of her face. Her voice a reedy whisper, her once-vibrant eye now clouded with exhaustion. She sat by a hearth, where a meager fire struggled to cast warmth into the chilly room.
+
+
+
+"Welcome, brave travelers," she rasped, offering them a weak, trembling hand. "I am Therin Blackroot, the elder of this village. Thank you for answering our plea. Our people... we are dying." Her words, though quiet, carried the weight of profound despair.
+
+
+
+She explained the situation in more detail, her gaze fixed on the flickering flames. "The spring, the very heart of Prariedale, that has provided us with clean water for generations, has become tainted. Its waters, once clear and sweet, now carry a foul taste and a sickly sheen. And it's not just the water. The local wildlife... they have become unusually aggressive. The forest, once a source of comfort and sustenance, now feels hostile. Bears, direwolves, even common slimes – they attack without provocation, their eyes wild and unnatural."
+
+
+
+Therin pushed a small, intricately carved wooden box across the table towards them. "I can offer you these," she said, her voice strained. Inside lay a [ insert quest prize ], crafted from rare herbs and ancient magic. And if you succeed in cleansing our spring, a handsome reward of [insert coin prize amount] to split amongst you, along with the eternal gratitude of Prariedale.”
+
+
+
+Her gaze, though weary, held a spark of hope as she looked at their young, determined faces. "Will you journey deep into the woods to find the source of this poisoning? To cleanse it, if you can?"
+
+
+
+${Player2Name}  stepped forward, ${Player2HisHerTheir} hand resting gently on Therin's shoulder. "We will, Elder Therin. You have our word." ${cap(Player2HisHerTheir)} voice was firm, radiating a confidence that seemed to bring a flicker of relief to the elder's eyes.
+
+←—------------------- copy break—----------------->
+
+
+"We will fix this problem for your village." ${Player4Name} nodded decisively, and ${Player3Name}, though still cautious, felt a surge of resolve. They had come to help, and help they would.
+
+
+
+With the Elder’s directions roughly sketched, and the promise of a powerful reward fueling their spirits, the small group set about gathering their supplies. They double-checked their waterskins, ensuring they were filled with the untainted water they had brought from their journey. They packed their tools and weapons, each item carefully chosen for the unknown challenges that lay ahead. Therin had warned them of the aggression of the creatures within the forest, so they made sure their blades were sharp, and their spells ready.
+
+
+
+By mid-morning, with the sun a pale disc through the thinning canopy, and no sign of the Great Eye, they stepped out of Prariedale and into the whispering woods. The path was overgrown, less used than it should be, a testament to the village's isolation and fear. The air grew cooler, carrying the damp scent of autumn and decaying leaves, overlaid with a faint, unsettling tang that was not quite natural. Their goal was clear: find whatever was tainting the natural spring and cure it if they could – or return to report their findings if the task proved too great for their immediate abilities. Hope for Prariedale lay in their hands, deep within the shadows of the Sage Kingdom forest.
+
+←—------------------- copy break—----------------->
+`.trim();
   document.getElementById("storyBox").innerText = storyText;
 
-  // 7) modular actions & UI – exactly as before
-  const actions = [
-    {
-      name:      "Brave the Mud",
-      condition: "Always available",
-      prompt:    "The adventurers descend into the pit and wade through the sludge. The thick substance is heavy on their bodies and gear as they struggle to cross.",
-      result:    "They cautiously enter the mud pit and continue on their way, eyes pinned on the dry arch at the end.",
-      next:      { label: "Continue", url: "brave" }
-    },
-    {
-      name:      "Use Rope",
-      condition: "Requires item: Rope",
-      prompt:    "The adventurers tie the rope to a fixture and use it to climb down and across the sludge.",
-      result:    "The rope holds firm, and the party crosses without losing resources.",
-      next: [
-        { label: "Fail",    url: "a" },
-        { label: "Succeed", url: "b" }
-      ]
-    },
-    {
-      name:      "Use Bucket",
-      condition: "Requires item: Bucket",
-      prompt:    "The adventurers scoop out the sludge to clear a path.",
-      result:    "The path is cleared, but the effort costs them 1 resource.",
-      next:      { label: "Continue", url: "bucket" }
-    },
-    {
-      name:      "Water Spell",
-      condition: "Requires mage with water spell",
-      prompt:    "The sludge is soaked in water magic, making it lighter and easier to cross.",
-      result:    "The spell is cast successfully. The party crosses with ease, using up 1 cast.",
-      next:      { label: "Continue", url: "water" }
-    }
-  ];
-
-  const grid     = document.getElementById("optionGrid");
-  const resBox   = document.getElementById("resultBox");
-  const resTitle = document.getElementById("resultTitle");
-  const resText  = document.getElementById("resultText");
-  const resAct   = document.getElementById("resultActions");
-
-  actions.forEach((act, idx) => {
-    const box = document.createElement("div");
-    box.className = "option-box";
-    box.innerHTML = `
-      <h3>${act.name}</h3>
-      <p><strong>Condition:</strong> ${act.condition}</p>
-      <p>${act.prompt}</p>
-      <div class="button-group">
-        <button class="storyButton" onclick="showResult(${idx})">Proceed</button>
-        <button class="storyButton" onclick="copyPrompt(${idx})">Copy Prompt</button>
-      </div>
-    `;
-    grid.appendChild(box);
-  });
-
-  function showResult(idx) {
-    const act = actions[idx];
-    resTitle.innerText = `Result: ${act.name}`;
-    resText.innerText  = act.result;
-    resAct.innerHTML   = "";
-
-    const nexts = Array.isArray(act.next) ? act.next : [act.next];
-    nexts.forEach(({label, url}) => {
-      const btn = document.createElement("button");
-      btn.className = "storyButton";
-      btn.innerText = label;
-      btn.onclick   = () => goToPage(url);
-      resAct.appendChild(btn);
-    });
-
-    const copyBtn = document.createElement("button");
-    copyBtn.className = "storyButton";
-    copyBtn.innerText = "Copy Result";
-    copyBtn.onclick   = copyResult;
-    resAct.appendChild(copyBtn);
-
-    resBox.style.display = "block";
-  }
-
-  function copyPrompt(idx) {
-    navigator.clipboard.writeText(actions[idx].prompt)
-      .then(() => alert("Prompt copied!"))
-      .catch(() => alert("Copy failed."));
-  }
-
-  function copyResult() {
-    navigator.clipboard.writeText(resText.innerText)
-      .then(() => alert("Result copied!"))
-      .catch(() => alert("Copy failed."));
-  }
-
-  const title = "Your Prompt Title Here";
+  // 7) title sync + navigation helpers + copyStory
+  const title = "Tainted Spring: Introduction";
   document.getElementById("pageTitle").innerText   = title;
   document.getElementById("promptTitle").innerText = title;
 

@@ -48,6 +48,38 @@
       padding: 20px;
       border-radius: 10px;
     }
+.story-segment {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5em;
+  margin-bottom: 1em;
+}
+
+.story-segment p {
+  flex: 1;
+  margin: 0;
+  padding: 0.5em;
+  background: #faf4c7;
+  border: 2px solid #967e00;
+  border-radius: 4px;
+  white-space: pre-wrap;
+}
+
+.story-segment button {
+  flex-shrink: 0;
+  padding: 0.5em 1em;
+  font-size: 14px;
+  background: #967e00;
+  color: #faf1ab;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.story-segment button:hover {
+  background: #e48198;
+}
+
   </style>
 </head>
 <body class="prompt">
@@ -221,7 +253,40 @@ By mid-morning, with the sun a pale disc through the thinning canopy, and no sig
 
 ←—------------------- copy break—----------------->
 `.trim();
-  document.getElementById("storyBox").innerText = storyText;
+  
+// 6a) split storyText into segments
+const delimiter = "←—------------------- copy break—----------------->";
+const segments  = storyText.split(delimiter);
+const storyBox  = document.getElementById("storyBox");
+
+storyBox.innerHTML = ""; // clear out default plain text
+
+segments.forEach(text => {
+  const trimmed = text.trim();
+  if (!trimmed) return; // skip empty segments
+
+  // 6b) create wrapper for each piece
+  const wrapper = document.createElement("div");
+  wrapper.className = "story-segment";
+
+  // 6c) create the text node (preserves newlines)
+  const para = document.createElement("p");
+  para.innerText = trimmed;
+
+  // 6d) create the copy button
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.textContent = "Copy";
+  btn.addEventListener("click", () => {
+    navigator.clipboard.writeText(trimmed)
+      .then(() => console.log("Copied:", trimmed))
+      .catch(err => console.error("Copy failed", err));
+  });
+
+  wrapper.append(para, btn);
+  storyBox.appendChild(wrapper);
+});
+
 
   // 7) title sync + navigation helpers + copyStory
   const title = "Tainted Spring: Introduction";
@@ -236,6 +301,39 @@ By mid-morning, with the sun a pale disc through the thinning canopy, and no sig
       .then(() => alert("Story copied!"))
       .catch(() => alert("Copy failed."));
   }
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.copy-break').forEach(container => {
+    const delimiter = container.dataset.delimiter;
+    const raw       = container.textContent;
+    const parts     = raw.split(delimiter);
+
+    container.innerHTML = ''; // clear out the raw text
+
+    parts.forEach(text => {
+      const segment = text.trim();
+      if (!segment) return;  // skip empty splits
+
+      // wrapper for each piece
+      const wrapper = document.createElement('div');
+      wrapper.className = 'copy-segment';
+
+      // the text block
+      const pre = document.createElement('pre');
+      pre.textContent = segment;
+
+      // the copy button
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = 'Copy';
+      btn.addEventListener('click', () =>
+        navigator.clipboard.writeText(segment)
+      );
+
+      wrapper.append(pre, btn);
+      container.appendChild(wrapper);
+    });
+  });
+});
 </script>
 </body>
 </html>
