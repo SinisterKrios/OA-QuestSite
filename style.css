@@ -38,7 +38,7 @@ article{
       background-color: rgba(61, 61, 62, 0.9);
 padding: 25px;
 color: #ffffff;
-min-width: 1000px;
+min-width: 80%;
 }
     input, select, button {
       width: 100%;

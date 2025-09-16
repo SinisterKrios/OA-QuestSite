@@ -12,7 +12,7 @@
     body {
       font-family: Arial, sans-serif;
       margin: 20px auto;
-      max-width: 1000px;
+      max-width: 100%;
       text-align: center;
     }
     .column-wrapper {
@@ -66,7 +66,7 @@ input::placeholder {
 article {
   box-sizing: border-box;
   width: 100%;
-  max-width: 1000px;
+  max-width: 100%;
   margin: 0 auto;
   padding: 10px;   /* match your mobile padding */
 }
@@ -78,7 +78,7 @@ html, body {
 
 body { 
   box-sizing: border-box;    /* already set globally */
-  max-width: 1000px;         /* your desktop cap */
+  max-width: 100%;         /* your desktop cap */
   margin: 0 auto;            /* center on larger screens */
   padding: 20px 10px;        /* give a little breathing room */
 }
@@ -122,7 +122,6 @@ html, body {
   /* Make the article span the viewport */
   article {
     max-width: 100%;
-    width: 100%;
     padding: 10px;    /* stay inside edges */
     margin: 0 auto;
   }
@@ -141,16 +140,16 @@ html, body {
     max-width: 100%;   
     height: auto;
   }
-hr {
-    max-width: 40%;
-}
 
   /* Ensure your mode selector & buttons stay full-width */
   input,
   select,
   button {
-    max-width: 40%;
+    max-width: 90%;
     height: 44px;     /* comfortable tap target */
+  }
+  hr {
+    max-width: 90%;
   }
 
   /* Stack player cards one per row */
@@ -168,9 +167,8 @@ hr {
   height: auto;
 }
 
-body{
-  outline: 1px solid red !important;
-background: none;  
+article {
+  max-width: 100%;
 }
 }
 
@@ -178,7 +176,7 @@ background: none;
   </style>
 </head>
 <body>
-<article>
+<article style="max-width: 100%;">
 <div class="container">
 
 <img src="https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/i/71515031-3f45-4117-abcd-a4fc1856b7d7/d6501sy-73956cdd-e523-4ac3-9b77-6d2c6ca2bab7.gif">
