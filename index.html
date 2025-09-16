@@ -93,14 +93,20 @@ input::placeholder {
 
   /* each player card full-width */
   .player-column {
-    min-width: auto;
     width: 100%;
+    min-width: auto;
   }
 
   /* shrink overall container */
   article {
     max-width: 100%;
-    padding: 10px;
+    width: 100%;
+    padding: 10px;       /* optional padding */
+    box-sizing: border-box;
+  }
+
+  body {
+    max-width: 100%;
   }
 
   /* smaller type for mobile */
