@@ -6,6 +6,9 @@
   <title>Enter Player Info</title>
 <link rel="stylesheet" href="style.css">
   <style>
+*, *::before, *::after {
+  box-sizing: border-box;
+}
     body {
       font-family: Arial, sans-serif;
       margin: 20px auto;
@@ -85,43 +88,45 @@ input::placeholder {
 	}
 
 @media (max-width: 600px) {
-  /* make the wrapper a column, not a row */
-  .column-wrapper {
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  /* each player card full-width */
-  .player-column {
-    width: 100%;
-    min-width: auto;
-  }
-
-  /* shrink overall container */
+  /* Make the article span the viewport */
   article {
     max-width: 100%;
     width: 100%;
-    padding: 10px;       /* optional padding */
-    box-sizing: border-box;
+    padding: 10px;    /* stay inside edges */
+    margin: 0 auto;
   }
 
-  body {
-    max-width: 100%;
+  /* Stack header images + text vertically */
+  .container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
   }
 
-  /* smaller type for mobile */
-  body, input, select, button, p {
-    font-size: 14px;
-  }
-
-  /* shrink or hide your side images */
+  /* Constrain or hide the GIFs so they don’t force overflow */
   .container img {
-    display: none; /* or `max-width: 40px; height: auto;` */
+    max-width: 80%;   /* or set to 100px */
+    height: auto;
   }
 
-  /* keep your inputs/buttons tappable */
-  input, select, button {
-    height: 44px;
+  /* Ensure your mode selector & buttons stay full-width */
+  input,
+  select,
+  button {
+    width: 100%;
+    height: 44px;     /* comfortable tap target */
+  }
+
+  /* Stack player cards one per row */
+  .column-wrapper {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .player-column {
+    width: 100%;
+    min-width: auto;
   }
 }
 
