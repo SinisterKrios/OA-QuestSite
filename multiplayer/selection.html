@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <link rel="stylesheet" href="../style.css">
+
   <meta charset="UTF-8">
   <title>Quest Selector</title>
   <style>
@@ -12,11 +14,24 @@
       font-size: 1em;
       margin-top: 1em;
     }
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
   </style>
 </head>
 <body>
-  <h1>Select a Quest</h1>
-  <label for="questDropdown">Choose your quest:</label>
+<article>
+<div class="container">
+
+<img src="https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/i/71515031-3f45-4117-abcd-a4fc1856b7d7/d6501sy-73956cdd-e523-4ac3-9b77-6d2c6ca2bab7.gif">
+  <div>
+  <h2 >Select a Quest</h2>
+</div>
+<img src="https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/i/71515031-3f45-4117-abcd-a4fc1856b7d7/d6501sy-73956cdd-e523-4ac3-9b77-6d2c6ca2bab7.gif">
+
+</div>
+
   <select id="questDropdown">
     <option value="">-- Select a quest --</option>
     <option value="tainted_spring">Tainted Spring</option>
@@ -50,5 +65,6 @@
       }
     });
   </script>
+</article>
 </body>
 </html>

@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title id="pageTitle">Multiplayer Prompt</title>
+  <link rel="stylesheet" href="../../style.css">
+  <style>
+/* container and segment sizing */
+.story {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.story-segment {
+  background: #676767;            /* match your dark box look if needed */
+  color: #eee;
+  border-radius: 6px;
+  padding: 1rem;
+  margin: 0.75rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+/* preserve newlines but allow wrapping so lines don't grow horizontally */
+.story-segment pre {
+  white-space: pre-wrap;      /* preserves newlines and allows wrapping */
+  word-break: break-word;
+  margin: 0;
+  font-family: serif;         /* match your aesthetic from template */
+  line-height: 1.4;
+  max-height: 240px;          /* limit visible height */
+  overflow: auto;             /* enable internal scrolling if needed */
+  padding-right: 0.25rem;     /* room for scrollbar */
+}
+
+/* keep the copy button sized and aligned */
+.story-segment .storyButton {
+  align-self: flex-end;
+  padding: 0.35rem 0.8rem;
+  font-size: 0.95rem;
+  border-radius: 6px;
+  width: auto;
+  min-width: 72px;
+background-color: #303030;
+}
+
+
+    .button-group {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: auto;
+    }
+    #copyBuffer {
+      position: absolute;
+      left: -9999px;
+    }
+    .option-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      margin-top: 30px;
+    }
+    .option-box {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background: #676767;
+      border: 2px solid #303030;
+      border-radius: 8px;
+      padding: 15px;
+      text-align: left;
+      min-height: 280px;
+    }
+    .option-box h3 {
+      margin-top: 0;
+      color: #ffffff;
+    }
+    .option-box p {
+      margin: 8px 0;
+    }
+    .result-box {
+      display: none;
+      margin-top: 30px;
+      background: #676767;
+      border: 2px solid #303030;
+      border-radius: 8px;
+      padding: 20px;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+      text-align: left;
+    }
+    .result-box h3 {
+      margin-top: 0;
+      color: #ffffff;
+    }
+    #resultActions {
+      margin: 15px 0;
+    }
+	button{
+		color: white;
+}
+.option-grid{
+	background-color: #303030;
+	padding: 20px;
+}
+.option-box button{
+	background-color: #303030;
+}
+
+/* container: place buttons side-by-side */
+.button-group, #resultActions{
+  display: flex;
+  gap: 10px;
+  align-items: stretch; /* ensure children fill cross axis */
+}
+
+/* make every button share space and have identical height */
+.button-group .storyButton, #resultActions button{
+  flex: 1 1 0;         /* grow and shrink equally, no base width bias */
+  min-width: 0;        /* allow proper shrinking inside grid */
+  box-sizing: border-box;
+  height: 48px;        /* fixed height so all match exactly */
+  padding: 0 1rem;     /* horizontal padding only (vertical controlled by height) */
+  display: inline-flex;
+  align-items: center; /* center label vertically */
+  justify-content: center;
+  border-radius: 8px;
+background-color: #303030;
+}
+
+.option-box hr{
+  border: none;
+  height: 1px;
+  background: #ccc;        /* line color */
+  margin: 0;          /* spacing */
+  display: block;  
+}
+
+  </style>
+</head>
+<body class="prompt">
+<article>
+<div class="container">
+
+<img src="https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/i/71515031-3f45-4117-abcd-a4fc1856b7d7/d6501sy-73956cdd-e523-4ac3-9b77-6d2c6ca2bab7.gif">
+  <div>
+  <h2 id="promptTitle"></h2>
+  <p>By Tenshilove</p>
+</div>
+<img src="https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/i/71515031-3f45-4117-abcd-a4fc1856b7d7/d6501sy-73956cdd-e523-4ac3-9b77-6d2c6ca2bab7.gif">
+
+</div>
+
+<hr>
+
+  <div id="customDisplay"></div>
+  <button class="storyButton" onclick="goToFix()">Fix Parameters</button>
+  <button class="storyButton" onclick="goToPage('index')">To Index</button>
+
+  <div class="story">
+    <div id="storyBox"></div>
+    <button class="storyButton" onclick="copyStory()">Copy Story</button>
+  </div>
+
+  <div class="option-grid" id="optionGrid"></div>
+
+  <div class="result-box" id="resultBox">
+    <h3 id="resultTitle"></h3>
+    <p id="resultText"></p>
+    <div id="resultActions"></div>
+  </div>
+
+  <textarea id="copyBuffer"></textarea>
+</article>
+
+<script>
+  // 0) pull URL params
+  const params = new URLSearchParams(window.location.search);
+
+  // 1) simple casing helpers
+  const lc  = s => (s||"").toLowerCase();
+  const cap = s => (s||"")[0]?.toUpperCase() + (s||"").slice(1);
+
+  // 2) pronounSet → flat keys your template expects
+  function pronounSet(subj) {
+    subj = lc(subj);
+    switch (subj) {
+      case "she":  return { HeSheThey:"she", HimHerThem:"her", HisHerTheir:"her", HisHersTheirs:"hers", WasWere:"was", DoesDo:"does", HasHave:"has" };
+      case "he":   return { HeSheThey:"he",  HimHerThem:"him",  HisHerTheir:"his",  HisHersTheirs:"his", WasWere:"was",  DoesDo:"does", HasHave:"has" };
+      case "they": return { HeSheThey:"they",HimHerThem:"them",HisHerTheir:"their",HisHersTheirs:"theirs",WasWere:"were", DoesDo:"do",  HasHave:"have" };
+      default:     return { HeSheThey:"it",  HimHerThem:"it",   HisHerTheir:"its", HisHersTheirs:"its", WasWere:"was",  DoesDo:"does", HasHave:"has" };
+    }
+  }
+
+  // 3) ensure we got all params
+  const required = [];
+  for (let i = 1; i <= 4; i++) {
+    required.push(
+      `Player${i}Name`,
+      `Player${i}HeSheThey`,
+      `Player${i}Class`,
+      `Player${i}Weapon`,
+      `Player${i}Damage`
+    );
+  }
+  if (required.some(k => !params.get(k))) {
+    window.location.href = `fix.html?${params}`;
+  }
+
+  // 4) define real globals for Player1…Player4
+  const players = [];
+  for (let i = 1; i <= 4; i++) {
+    const rawName  = params.get(`Player${i}Name`)    || "";
+    const rawPron  = params.get(`Player${i}HeSheThey`)|| "";
+    const rawClass = params.get(`Player${i}Class`)   || "";
+    const rawWeap  = params.get(`Player${i}Weapon`)  || "";
+    const rawDmg   = params.get(`Player${i}Damage`)  || "";
+
+    const Name      = cap(lc(rawName));
+    const HeSheThey = lc(rawPron);
+    const Class     = cap(lc(rawClass));
+    const Weapon    = cap(lc(rawWeap));
+    const Damage    = lc(rawDmg);
+
+    const pfx = pronounSet(HeSheThey);
+
+    // expose as globals
+    window[`Player${i}Name`]          = Name;
+    window[`Player${i}HeSheThey`]     = pfx.HeSheThey;
+    window[`Player${i}HimHerThem`]    = pfx.HimHerThem;
+    window[`Player${i}HisHerTheir`]   = pfx.HisHerTheir;
+    window[`Player${i}HisHersTheirs`] = pfx.HisHersTheirs;
+    window[`Player${i}WasWere`]       = pfx.WasWere;
+    window[`Player${i}DoesDo`]        = pfx.DoesDo;
+    window[`Player${i}HasHave`]       = pfx.HasHave;
+    window[`Player${i}Class`]         = Class;
+    window[`Player${i}Weapon`]        = Weapon;
+    window[`Player${i}Damage`]        = Damage;
+
+    // also collect into players[] for the top display
+    players.push({Name, HeSheThey, Class, Weapon, Damage});
+  }
+
+  // 5) render the top summary
+  document.getElementById("customDisplay").innerHTML =
+    players.map((p, i) =>
+      `<strong>Player ${i+1}:</strong> ${p.Name} — 
+       <em>${p.HeSheThey}</em> | Class: ${p.Class} | Weapon: ${p.Weapon} | Damage: ${p.Damage}`
+    ).join("<br>");
+
+  // --- NEW: storyText with delimiter and per-segment copy buttons ---
+  const storyText = `As the adventurers continued their journey in a comfortable sort of silence, they began to hear notes of a tune being strummed ahead of them. The off key melancholy music put them on edge immediately. As they moved cautiously closer, words started to intertwine with the song. 
+
+“Here I am, and here I’ll sta-ay. My home, my grave, until I’m cold and gra-ay.”
+
+“Geeze, this song is so depressing,” ${Player2Name} commented as ${Player2HeSheThey} moved around a particularly sticky mess of thorns.
+
+“Their instrument is out of tune too,” ${Player1Name} agreed. “It sounds like a dying animal,” ${Player1HeSheThey} put ${Player1HisHerTheir} hands over ${Player1HisHerTheir} ears as the musician hit a particularly loud note.
+
+“We should see if we can help,” ${Player4Name} suggested with a scowl.
+
+“What if it’s a trap?” ${Player3Name} replied.
+
+A small group of vermin scurried over the path, tripping over themselves as if trying to get out of the area as quickly as possible.
+
+“Maybe it is, but it would be a mercy to everything around here if we could just stop that awful noise,” ${Player4Name} complained.
+
+“Okay, we’ll check it out, but we should tread carefully,” ${Player3Name} said as ${Player3HeSheThey} stepped up onto and then jumped off of a larger boulder set into the gravel path.
+
+“It’s coming from over there,” ${Player2Name} pointed as ${Player2HeSheThey} checked that ${Player2HisHerTheir} ${Player2Weapon} was still easily accessible.
+
+“No luck, no such, has ever crossed me so po-orly,” the singer continued, their voice hitching slightly as if they were yawning mid word or not sure what word would rhyme with ‘poorly’. “I just wanted lunch, now I’ll feed the wo-ormies.”
+
+As the adventurers entered a small clearing, they saw and heard a young buck Aries. He was dressed rather dully, covered in small mushrooms of different shapes, colors and sizes, and he appeared to be standing about waist deep in the center of a rather large pond filled with a black sticky looking substance. He sighed dismally, his eyes closed as his fingers strummed a worn down looking lute. Despite his dreary demeanor the music-if you can call it that- didn’t skip a beat as he pulled against the muck, evidently stuck in its embrace.
+
+“Hello there,” ${Player1Name} called out as they took the lead, walking towards the edge of the substance slowly. “We happened to be walking by and thought mayhaps we could assist you.” ${cap(Player1HeSheThey)} motioned behind ${Player1HimHerThem} as a way of introducing ${Player1HisHerTheir} herd.
+
+“What is that mess you’re stuck in,” ${Player4Name} stepped forward and asked. “Can you get out?”
+
+“Oh this?” The deer replied, as if it was nothing important. “It’s nothing important-” he sighed, “just my do-oom, my fa-ate, my never-ending horro-or called li-ife.” He sung the last few words with his eyes closed as his fingers continued their haphazard strumming. He dipped his head down low and one of the mushrooms bobbed as it balanced gingerly on his head.
+
+“Do you have a name?” ${Player3Name} queried, to keep the young deer talking.
+
+“Hmm,” the deer looked up at them again, slightly startled, as if he forgot they were there. “Tanner, I suppose,” he replied, as if he wasn’t sure of the answer. “Though it hardly matters,” he continued, paying attention to the next few chords. “No one will remember me anyways, so there’s no point in discussing it.”
+
+“Don’t be so sure-” ${Player2Name} said confidently as ${Player2HeSheThey} looked around the clearing, searching for something that could be used to help the situation. “I mean we’re here after all. Your fate is not sealed.”
+
+“It is though,” the deer said, matter-of-factly. “Even if you get me out, I’ll probably just die on the way home.” He strummed again, closing his eyes, resigned to accept his end. “You seem im-portant, on a mis-sion most di-ire. No need to wor-ry about little old me-e, and how I’ll di-ie” he sang terribly.
+
+The adventurers stepped aside as the buck ignored them again and continued singing and strumming. They had a decision to make.
+
+“We should definitely help him right?” said ${Player2Name} as if ${Player2HeSheThey} ${Player2WasWere}n't sure.
+
+“Definitely…” replied ${Player1Name} with even less confidence. 
+
+“If the mushrooms are any indication, he doesn’t seem to be sinking too quickly,” suggested ${Player4Name}. “We could come back after we finish our mission. Bring help? Maybe he’ll be in a better mood too.”
+
+${Player3Name} looked at the pathetic being and tried to judge how to pull him out of the tarish liquid. “He is vulnerable here. I’m not sure that’s the best idea. But what could we do now? Any Ideas?” 
+`.trim();
+
+  // split into segments and render them with copy buttons
+  const delimiter = "←—------------------- copy break—----------------->";
+  const segments  = storyText.split(delimiter);
+  const storyBox  = document.getElementById("storyBox");
+
+  storyBox.innerHTML = ""; // clear
+
+  segments.forEach((text) => {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "story-segment";
+
+    const pre = document.createElement("pre");
+    pre.textContent = trimmed;
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.textContent = "Copy";
+    btn.className = "storyButton";
+    btn.addEventListener("click", () => {
+      navigator.clipboard.writeText(trimmed)
+        .then(() => {
+          btn.textContent = "Copied!";
+          setTimeout(() => btn.textContent = "Copy", 1200);
+        })
+        .catch(() => {
+          btn.textContent = "Copy failed";
+          setTimeout(() => btn.textContent = "Copy", 1200);
+        });
+    });
+
+    wrapper.append(pre, btn);
+    storyBox.appendChild(wrapper);
+  });
+
+  // 7) actions & UI (unchanged from your template2)
+  const actions = [
+    {
+      name:      "Pull Him Out",
+      condition: "Always available",
+      prompt:    `“We have to help him! Quick!” ${Player1Name} starts towards the muck without hesitation.`,
+      result:    `${Player1Name}, with a heroic impulse, declared, "Hang on, I'll get you out of there!" ${cap(Player1HeSheThey)} entered the muck, But the mud was a deceptive foe, more adhesive and treacherous than it appeared. In an instant, ${Player1Name} was up to ${Player1HisHerTheir} thighs, the forward momentum halted completely by the sucking, grasping mud. A searing, corrosive burn began to spread up ${Player1HisHerTheir} legs. 
+
+"It burns! Get me out of here!" ${Player1Name} cried out, ${Player1HisHerTheir} voice laced with panic as the muck began to sting and eat away at ${Player1HisHerTheir} skin. “Grab ${Player1HimHerThem}!” ${Player4Name} shouted!
+The other adventurers rushed to the edge of the mire, grabbing ${Player1Name}'s outstretched arms and heaving with all their might.
+
+ It took every ounce of their strength to finally yank ${Player1Name} free, leaving ${Player1HimHerThem} bruised, shaken, and with stinging, red marks marring ${Player1HisHerTheir} skin and fur. With the bard still out of reach, they knew a direct rescue attempt was too dangerous.
+${Player1Name} takes -1 hp and then the players have the choice to choose another option.`,
+      next:      { label: "Continue", url: "l" }
+    },
+    {
+      name:      "Use Shovel",
+      condition: "Requires item: Shovel",
+      prompt:    `“We have a shovel that should be able to reach him,” ${Player2Name} said.
+
+“Good idea,” agrees ${Player3Name}`,
+      result:    `"Heave!" ${Player2Name} yelled, ${Player2HisHerTheir} knuckles white as ${Player2HeSheThey} gripped the wooden handle of a shovel. The group grunted in unison, pulling on the makeshift lever as the bard clung to the shovel's metal blade for dear life. 
+
+The mud, thick and viscous, resisted their efforts, but slowly and surely, the bard began to inch his way out. "Just a little further! You're almost there!"
+
+${Player3Name} encouraged, trying to keep the bard's spirits up. Finally, with a loud schlorp and a collective groan of effort, the bard flopped onto the dry ground, covered head to toe in the black, fetid muck. "I've been in worse," he groaned melodramatically, wiping a smudge of mud from his face. "Thank you for that. Though my lute may never forgive me."
+
+Now freed, the bard strummed his lute. "Ahem," he began, "Oh noble heroes, with hearts so tru-ue, you pulled me out of this muck and goo-oo! Now I bequeath this aid to you-ou-ou!" He handed them a small medkit. 
+
+He turned and waved and immediately stepped into another tar pit. "Oh, come on!" he wailed, flailing his arms. 
+
+The adventurers, shaking their heads, ran over and pulled him out once more before making sure he was safely on the main road before continuing on their quest.
+`,
+      next:      { label: "Continue", url: "n" }
+    },
+    {
+      name:      "Use Rope",
+      condition: "Requires item: Rope",
+      prompt:    ` Seeing the bard’s predicament, ${Player4Name} uncoiled a length of strong rope from ${Player4HisHerTheir} pack. “Why don’t we throw this to him and pull him out that way?” ${cap(Player4HeSheThey)} suggested.`,
+      result:    `"Catch!" ${Player4Name} called, and with a practiced flick of the wrist, ${Player4HeSheThey} sent the rope sailing toward the struggling bard. The bard’s pessimistic song cut off abruptly as he grabbed the rope. With the rope pulled taut between them and the bard, the adventurers braced themselves. 
+
+"All together now!" ${Player1Name} commanded, and ${Player1HeSheThey} began to haul the bard out, the rope digging into ${Player1HisHerTheir} hands. The bard, who had been singing about his impending death, began a triumphant and surprisingly off-key aria as he was dragged to safety. 
+
+"I was doomed by muck, but now I'm free-ee, all thanks to the heroes who rescued me-ee!" he sang, though he still had a lot of mud to wash off.
+
+Now freed, the bard strummed his lute. "Ahem," he began, "Oh noble heroes, with hearts so tru-ue, you pulled me out of this muck and goo-oo! Now I bequeath this aid to you-ou-ou!" He handed them a small medkit. 
+
+He turned and waved and immediately stepped into another tar pit. "Oh, come on!" he wailed, flailing his arms. 
+
+The adventurers, shaking their heads, ran over and pulled him out once more before making sure he was safely on the main road before continuing on their quest.
+`,
+      next:      { label: "Continue", url: "n" }
+    },
+    {
+      name:      "Use Nature Spell",
+      condition: "A mage with a nature spell and the mana in which to cast it",
+      prompt:    `"I think I can help," MAGE said, “with my nature magic. I can grow some vines or branches to free him.”`,
+      result:    `MAGE began to recite THEIR spell, focusing THEIR energy on THEIR WAND/STAFF. The ground around the bard rumbled, and with a series of sharp cracks, a gnarled, thick tree root erupted from the mud directly beneath him. The bard's song of woe stopped instantly. "What in the…?" he exclaimed, his eyes wide with surprise. 
+
+"Jump!" ${Player2Name} shouted, and with a final, desperate leap, the bard scrambled onto the root and then to safety. "Well, that was a new one," he muttered, brushing mud from his pants. "I should write a song about that—the ballad of the magic root!"
+
+Now freed, the bard strummed his lute. "Ahem," he began, "Oh noble heroes, with hearts so tru-ue, you pulled me out of this muck and goo-oo! Now I bequeath this aid to you-ou-ou!" He handed them a small medkit. 
+
+He turned and waved and immediately stepped into another tar pit. "Oh, come on!" he wailed, flailing his arms. 
+
+The adventurers, shaking their heads, ran over and pulled him out once more before making sure he was safely on the main road before continuing on their quest.
+`,
+      next:      { label: "Continue", url: "n" }
+    },
+    {
+      name:      "Water Spell",
+      condition: "A mage with a water spell and the mana in which to cast it",
+      prompt:    `MAGE rubs THEIR chin, “Some water may loosen up the muck.”
+
+“There aren’t any streams nearby,” ${Player3Name} says.
+
+“I have another idea,” MAGE takes THEIR spellbook and flips through the pages.”`,
+      result:    `MAGE  raised THEIR hands toward the grey sky. "It's time to wash away the sorrows!" THEY declared with a flourish. THEY recited THEIR spell and waved THEIR wand until a single, dark cloud gathered overhead, and a sudden downpour of rain fell from a point directly over the bard's head. 
+
+"Oh, woe is me! First I'm stuck in mud, now a tragic death in the rain!" the bard wailed dramatically, flailing his arms as the water pelted him. "The heavens themselves weep for my muddy fate!" he cried, a master of melodrama even in the most dire of situations. 
+
+But the water, instead of sealing his fate, seeped into the surrounding muck, making it loose and watery enough for him to swim out. He splashed to the dry ground, dripping wet but safe and still complaining. “Oh dear!”
+
+Now freed, the bard strummed his lute. "Ahem," he began, "Oh noble heroes, with hearts so tru-ue, you pulled me out of this muck and goo-oo! Now I bequeath this aid to you-ou-ou!" He handed them a small medkit. 
+
+He turned and waved and immediately stepped into another tar pit. "Oh, come on!" he wailed, flailing his arms. 
+
+The adventurers, shaking their heads, ran over and pulled him out once more before making sure he was safely on the main road before continuing on their quest.
+`,
+      next:      { label: "Continue", url: "n" }
+    },
+    {
+      name:      "Use Bedroll",
+      condition: "Requires item: Bedroll",
+      prompt:    `"I have an idea," ${Player1Name} said, pulling a bedroll from ${Player1HisHerTheir} pack. "We can lay this down to distribute our weight. It might be able to hold us." ${Player4Name}, however, was less than thrilled. 
+
+"Are you serious? My favorite bedroll? I'm going to have to sleep on the ground for the rest of this trip!"
+
+“Don’t complain, a man’s life is at stake.”`,
+      result:    `They laid the bedroll over the muck, and ${Player1Name}, with a careful step, tested its weight. It held long enough for ${Player1HimHerThem} to make it to the bard and pull him up. With a concerted effort, they both leapt from the slowly sinking bedroll to the dry dirt. 
+
+"You owe me a new one!" ${Player4Name} grumbled, glaring at ${Player4HisHerTheir} lost sleeping gear. The bard, for his part, just kept brushing mud off himself and ignoring the complaint.
+
+Now freed, the bard strummed his lute. "Ahem," he began, "Oh noble heroes, with hearts so tru-ue, you pulled me out of this muck and goo-oo! Now I bequeath this aid to you-ou-ou!" He handed them a small medkit. 
+
+He turned and waved and immediately stepped into another tar pit. "Oh, come on!" he wailed, flailing his arms. 
+
+The adventurers, shaking their heads, ran over and pulled him out once more before making sure he was safely on the main road before continuing on their quest.
+`,
+      next:      { label: "Continue", url: "n" }
+    },
+    {
+      name:      "Leave Him",
+      condition: "Always available",
+      prompt:    ` The adventurers listened to the bard's grating, off-key singing for a few moments, the sound scraping on their ears like a poorly-tuned violin. "What a terrible voice," ${Player2Name} muttered, grimacing.
+
+For a moment they considered just continuing on, they had a quest to complete.`,
+      result:    `“This is his own fault,” ${Player2Name} said hesitantly. “We don’t have time to stop and help him. It sounds like he has accepted his death anyway.”
+
+"Can we really just leave him?" ${Player1Name} asked, feeling a small, fleeting pang of guilt. "We have a quest to do," ${Player3Name} replied, already turning to walk away from the depressing spectacle.
+
+ "He's just annoying." The bard's song of misery grew fainter as they walked away, his words and music a grating sound they were all glad to be free of. 
+
+"And his lute is out of tune," ${Player4Name} added, the group united in their shared annoyance. They continued their quest, feeling only a small sense of regret that was quickly overshadowed by relief.`,
+      next:      { label: "Continue", url: "p" }
+    }
+  ];
+
+  const grid     = document.getElementById("optionGrid");
+  const resBox   = document.getElementById("resultBox");
+  const resTitle = document.getElementById("resultTitle");
+  const resText  = document.getElementById("resultText");
+  const resAct   = document.getElementById("resultActions");
+
+  actions.forEach((act, idx) => {
+    const box = document.createElement("div");
+    box.className = "option-box";
+    box.innerHTML = `
+      <h3>${act.name}</h3>
+	<hr>
+      <p><strong>Condition:</strong> ${act.condition}</p>
+      <p>${act.prompt}</p>
+      <div class="button-group">
+        <button class="storyButton" onclick="showResult(${idx})">Proceed</button>
+        <button class="storyButton" onclick="copyPrompt(${idx})">Copy Prompt</button>
+      </div>
+    `;
+    grid.appendChild(box);
+  });
+
+  function showResult(idx) {
+    const act = actions[idx];
+    resTitle.innerText = `Result: ${act.name}`;
+    resText.innerText  = act.result;
+    resAct.innerHTML   = "";
+
+    const nexts = Array.isArray(act.next) ? act.next : [act.next];
+    nexts.forEach(({label, url}) => {
+      const btn = document.createElement("button");
+      btn.className = "storyButton";
+      btn.innerText = label;
+      btn.onclick   = () => goToPage(url);
+      resAct.appendChild(btn);
+    });
+
+    const copyBtn = document.createElement("button");
+    copyBtn.className = "storyButton";
+    copyBtn.innerText = "Copy Result";
+    copyBtn.onclick   = copyResult;
+    resAct.appendChild(copyBtn);
+
+    resBox.style.display = "block";
+  }
+
+  function copyPrompt(idx) {
+    navigator.clipboard.writeText(actions[idx].prompt)
+      .then(() => alert("Prompt copied!"))
+      .catch(() => alert("Copy failed."));
+  }
+
+  function copyResult() {
+    navigator.clipboard.writeText(resText.innerText)
+      .then(() => alert("Result copied!"))
+      .catch(() => alert("Copy failed."));
+  }
+
+  const title = "Tainted Spring: Dreary Bard";
+  document.getElementById("pageTitle").innerText   = title;
+  document.getElementById("promptTitle").innerText = title;
+
+  function goToFix()    { window.location.href = `fix.html?${params}`; }
+  function goToPage(pg){ window.location.href = `${pg}.html?${params}`; }
+
+  // copy full story text
+  function copyStory(){
+    navigator.clipboard.writeText(storyText)
+      .then(() => alert("Story copied!"))
+      .catch(() => alert("Copy failed."));
+  }
+</script>
+
+</body>
+</html>
+

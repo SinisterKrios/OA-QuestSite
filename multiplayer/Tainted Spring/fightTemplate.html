@@ -247,8 +247,8 @@ width: 100%;
 </div>
 <br>
 <div class="continueButtons">
-  <button data-href="i.html">Successful Flee</button>
-  <button data-href="h.html">Full Party Victory</button>
+  <button data-href="x.html">Successful Flee</button>
+  <button data-href="y.html">Full Party Victory</button>
 </div>
 
 
@@ -319,28 +319,7 @@ width: 100%;
     ).join("<br>");
 
   // story injection
-  const storyText = `All of the Adventurers were now chest-deep, stewing in a pungent, lukewarm sludge.
-
-There was a moment of silence, broken only by the slurp and gurgle of the mud. Then, seeing that they were all mud covered, ${Player1Name} let out a laugh, a sound that quickly became a sputtering cough as a bubble of particularly fragrant gas popped near ${Player1HisHerTheir} nose. “Well, this is just perfect,” ${Player1HeSheThey}  wheezed.
-
-“At least we’re all in this together!” ${Player2Name} chirped, trying to remain optimistic, though a strand of algae was now draped artfully across ${Player2HisHerTheir} forehead.
-
-“I bet this mud is great for your skin,” ${Player3Name} offered, trying to lighten the mood. “Think of it as a natural, all-encompassing face mask!”
-
-“Oh, I’m thinking of it, ${Player3Name},” ${Player4Name} grumbled, trying to wipe a particularly slimy glob from ${Player4HisHerTheir} ear. “And it smells less like rejuvenation and more like a thousand rotten eggs had a very large, very public disagreement.”
-
-${Player2Name}, seeing ${Player2HisHerTheir} chance, scooped up a handful of mud. “Speak for yourself! Maybe you just need more mud!” ${cap(Player2HeSheThey)} promptly splooshed it right onto ${Player3Name}’s face eliciting a choked gasp.
-
-Their laughter, however, was short-lived. The pond itself began to rumble, a deep, unsettling tremor that resonated through their chests. The surface of the sludge, previously content to merely bubble and stink, started to churn violently. A mound of mud in the center began to rise, slowly at first, then with an accelerating, grotesque momentum. It grew, stretching upwards, forming a vaguely mound-like shape – massive, lumpy, and oozing. Two glowing, malevolent yellow eyes flickered open in its crude, mud-caked form. A gaping maw, filled with jagged shards of rock and ancient twigs, split open, and an unholy, guttural ROAR erupted, shaking the very trees. The Mud Monster, a mud soaked giant slime monster, a legend they’d scoffed at around campfires, was very, very real. And it looked distinctly unimpressed with their mud fight.
-
-It lunged forward, a massive, muddy fist swinging a slow, deliberate arc towards them.
-
-“Okay,” ${Player1Name} yelled, ${Player1HisHerTheir} composure finally cracking, “new plan, herd! RUN FOR YOUR LIVES! Or… maybe… fight?”  ${cap(Player1HeSheThey)} glanced at ${Player1HisHerTheir} mud-soaked companions.
-
-${Player4Name} gagged, “Run! Definitely run!”
-
-“Words of a coward! We’re adventurers! Heroes!” ${Player3Name} drew  ${Player3HisHerTheir} ${Player3Weapon} ready to slash at the mud.
-`;
+  const storyText = `"This place looks awful," ${Player1Name} murmured.`;
   document.getElementById("storyBox").innerText = storyText;
 
   function copyStory(){
@@ -393,8 +372,8 @@ const displayName = p.Name.length > maxLength
 
 
     <div class="hp-right">
-      <input type="number" class="current-hp" value="35" min="0" placeholder="Current">/
-      <input type="number" class="max-hp" value="35" min="1" placeholder="Max">
+      <input type="number" class="current-hp" value="20" min="0" placeholder="Current">/
+      <input type="number" class="max-hp" value="20" min="1" placeholder="Max">
       <label class="dead-toggle">
         <input type="checkbox" title="Dead?">
         ☠
@@ -407,7 +386,7 @@ renderHPTracker();
 
 
   // sync titles + nav helpers
-  const title = "Tainted Spring: Mud Slime!";
+  const title = "Your Prompt Title Here";
   document.getElementById("pageTitle").innerText   = title;
   document.getElementById("promptTitle").innerText = title;
 
@@ -415,15 +394,12 @@ renderHPTracker();
   function goToPage(pg){ window.location.href = `${pg}.html?${params}`; }
 
 const conditionMap = {
-  partyVictory: `With a final, desperate burst of sticky mud, **PLAYER** launched another **ATTACK**! It struck the monster's still-steaming core. The Giant Mud Slime let out a final, agonizing gurgle, its entire mass began to tremble and buckle. With a last, violent shudder, it collapsed into itself and broke apart into countless harmless puddles of muddy water that disappeared into the sludge pool. The water in the creek, while still murky and tainted , began to noticeably clear around the edges, and a sense of unnatural pressure lifted from the air. The source of the muddy toxicity had been neutralized, and the creek could begin to heal. However, the source of the greater spring was still being tainted. They must press on.`,
-  manDownVictory: `After a grueling, desperate struggle against the terrifying might of the Giant Mud Slime, it finally collapsed with a sickening gurgle, its form melting into harmless puddles. **SURVIVING PLAYERS** stood panting in the murky water, their bodies aching and their faces grim. The beast may have been defeated, but their joy was overshadowed by the sight of their fallen comrades, **FALLEN PLAYERS**, lying still in the mud. The quest to cleanse the spring was complete, but they had failed to protect their friends from harm, and the long, difficult journey back to the village for healing now loomed before them, a testament to the price of their victory.`,
-  partyKill: `**PLAYER** was alone, fighting valiantly but the sheer mass of the creature was overwhelming. A final torrent of mud slammed into **THEM**, engulfing **THEM** entirely. **THEY** struggled and thrashed against the oppressive muck, but eventually, **THEIR** movements slow and ceased as consciousness slipped away. The last thing **THEY** saw before they succumbed was the darkness of the mud closing around **THEM**. 
-
-Two days later, the next party of adventurers were sent in to find them. They stumbled upon the mire and found **PLAYER** and their allies, barely alive, half-submerged in a shallow pool where the mud had settled. They quickly pulled them free, cleansed the clinging muck, and carefully brought them back to Prairiedale village where they could be treated by healers.
-`,
-  manDownFlee: `The Giant Mud Slime was still a terrifying force, despite **SURVIVING PLAYERS**  efforts. With **NUMBER DOWN** comrades unconscious in the treacherous mud, the remaining Aries exchanged a desperate glance. **SURVIVING PLAYER** carefully secured a rope around the unconscious**DOWN PLAYER**. They knew the mission was secondary now; their only hope was to carry their friends out of this nightmare and back to safety. With a final, sorrowful glance at the still-tainted forest, they began their slow, arduous retreat through the thick mire, pulling their fallen comrades toward the safety of the forest's edge. Another Adventuring party would have to save Prairiedale in their stead.`,
-  partyFlee: `The immense creature reared from the mud with a roar, its body churning with foul energy. A massive sludge ball lashed out, forcing the party to scatter and struggle against the thick mud. They were already beaten down by the sludge, but all still standing. They decided to cut their losses. **PLAYER** called to the others, seeing the sheer power of the beast. "This isn't a fight we can win, not like this!" **THEY** bellowed, turning and fighting the current to move towards the treeline. The rest of the party quickly agreed, abandoning any thoughts of a stand. With desperate, flailing movements, they scrambled away from the roaring mud monster, splashing through the mire as fast as their legs would carry them, barely escaping the creature's grasping tendrils before disappearing into the dense forest. They will have to find another way around.`,
-  fleeBeforeBattle: `The immense creature reared from the mud with a roar, its body churning with foul energy. A massive sludge ball lashed out, forcing the party to scatter and struggle against the thick mud. Before a full exchange of blows could even begin, **PLAYER**'s eyes widened, seeing the sheer power of the beast. "This isn't a fight we can win, not like this!" **THEY** bellowed, turning and fighting the current to move towards the treeline. The rest of the party quickly agreed, abandoning any thoughts of a stand. With desperate, flailing movements, they scrambled away from the roaring mud monster, splashing through the mire as fast as their legs would carry them, barely escaping the creature's grasping tendrils before disappearing into the dense forest. They will have to find another way around.`
+  partyVictory: `Against all odds, the party triumphed in glorious fashion.`,
+  manDownVictory: `Despite losing a comrade, the party secured a hard-fought victory.`,
+  partyKill: `The entire party was overwhelmed. Their quest ends here.`,
+  manDownFlee: `The Giant Mud Slime was still a terrifying force... [full narrative here]`,
+  partyFlee: `They ran away`,
+  fleeBeforeBattle: `They ran away`
 };
 
 const contentBox = document.getElementById("narrativeContent");

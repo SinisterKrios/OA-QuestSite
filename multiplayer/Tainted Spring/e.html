@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title id="pageTitle">Multiplayer Prompt</title>
+  <link rel="stylesheet" href="../../style.css">
+  <style>
+/* container and segment sizing */
+.story {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.story-segment {
+  background: #676767;            /* match your dark box look if needed */
+  color: #eee;
+  border-radius: 6px;
+  padding: 1rem;
+  margin: 0.75rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+/* preserve newlines but allow wrapping so lines don't grow horizontally */
+.story-segment pre {
+  white-space: pre-wrap;      /* preserves newlines and allows wrapping */
+  word-break: break-word;
+  margin: 0;
+  font-family: serif;         /* match your aesthetic from template */
+  line-height: 1.4;
+  max-height: 240px;          /* limit visible height */
+  overflow: auto;             /* enable internal scrolling if needed */
+  padding-right: 0.25rem;     /* room for scrollbar */
+}
+
+/* keep the copy button sized and aligned */
+.story-segment .storyButton {
+  align-self: flex-end;
+  padding: 0.35rem 0.8rem;
+  font-size: 0.95rem;
+  border-radius: 6px;
+  width: auto;
+  min-width: 72px;
+background-color: #303030;
+}
+
+
+    .button-group {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: auto;
+    }
+    #copyBuffer {
+      position: absolute;
+      left: -9999px;
+    }
+    .option-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      margin-top: 30px;
+    }
+    .option-box {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background: #676767;
+      border: 2px solid #303030;
+      border-radius: 8px;
+      padding: 15px;
+      text-align: left;
+      min-height: 280px;
+    }
+    .option-box h3 {
+      margin-top: 0;
+      color: #ffffff;
+    }
+    .option-box p {
+      margin: 8px 0;
+    }
+    .result-box {
+      display: none;
+      margin-top: 30px;
+      background: #676767;
+      border: 2px solid #303030;
+      border-radius: 8px;
+      padding: 20px;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+      text-align: left;
+    }
+    .result-box h3 {
+      margin-top: 0;
+      color: #ffffff;
+    }
+    #resultActions {
+      margin: 15px 0;
+    }
+	button{
+		color: white;
+}
+.option-grid{
+	background-color: #303030;
+	padding: 20px;
+}
+.option-box button{
+	background-color: #303030;
+}
+
+/* container: place buttons side-by-side */
+.button-group, #resultActions{
+  display: flex;
+  gap: 10px;
+  align-items: stretch; /* ensure children fill cross axis */
+}
+
+/* make every button share space and have identical height */
+.button-group .storyButton, #resultActions button{
+  flex: 1 1 0;         /* grow and shrink equally, no base width bias */
+  min-width: 0;        /* allow proper shrinking inside grid */
+  box-sizing: border-box;
+  height: 48px;        /* fixed height so all match exactly */
+  padding: 0 1rem;     /* horizontal padding only (vertical controlled by height) */
+  display: inline-flex;
+  align-items: center; /* center label vertically */
+  justify-content: center;
+  border-radius: 8px;
+background-color: #303030;
+}
+
+.option-box hr{
+  border: none;
+  height: 1px;
+  background: #ccc;        /* line color */
+  margin: 0;          /* spacing */
+  display: block;  
+}
+
+  </style>
+</head>
+<body class="prompt">
+<article>
+<div class="container">
+
+<img src="https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/i/71515031-3f45-4117-abcd-a4fc1856b7d7/d6501sy-73956cdd-e523-4ac3-9b77-6d2c6ca2bab7.gif">
+  <div>
+  <h2 id="promptTitle">Your Prompt Title Here</h2>
+  <p>By Tenshilove</p>
+</div>
+<img src="https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/i/71515031-3f45-4117-abcd-a4fc1856b7d7/d6501sy-73956cdd-e523-4ac3-9b77-6d2c6ca2bab7.gif">
+
+</div>
+
+<hr>
+
+  <div id="customDisplay"></div>
+  <button class="storyButton" onclick="goToFix()">Fix Parameters</button>
+  <button class="storyButton" onclick="goToPage('index')">To Index</button>
+
+  <div class="story">
+    <div id="storyBox"></div>
+    <button class="storyButton" onclick="copyStory()">Copy Story</button>
+  </div>
+
+  <div class="option-grid" id="optionGrid"></div>
+
+  <div class="result-box" id="resultBox">
+    <h3 id="resultTitle"></h3>
+    <p id="resultText"></p>
+    <div id="resultActions"></div>
+  </div>
+
+  <textarea id="copyBuffer"></textarea>
+</article>
+
+<script>
+  // 0) pull URL params
+  const params = new URLSearchParams(window.location.search);
+
+  // 1) simple casing helpers
+  const lc  = s => (s||"").toLowerCase();
+  const cap = s => (s||"")[0]?.toUpperCase() + (s||"").slice(1);
+
+  // 2) pronounSet → flat keys your template expects
+  function pronounSet(subj) {
+    subj = lc(subj);
+    switch (subj) {
+      case "she":  return { HeSheThey:"she", HimHerThem:"her", HisHerTheir:"her", HisHersTheirs:"hers", WasWere:"was", DoesDo:"does", HasHave:"has" };
+      case "he":   return { HeSheThey:"he",  HimHerThem:"him",  HisHerTheir:"his",  HisHersTheirs:"his", WasWere:"was",  DoesDo:"does", HasHave:"has" };
+      case "they": return { HeSheThey:"they",HimHerThem:"them",HisHerTheir:"their",HisHersTheirs:"theirs",WasWere:"were", DoesDo:"do",  HasHave:"have" };
+      default:     return { HeSheThey:"it",  HimHerThem:"it",   HisHerTheir:"its", HisHersTheirs:"its", WasWere:"was",  DoesDo:"does", HasHave:"has" };
+    }
+  }
+
+  // 3) ensure we got all params
+  const required = [];
+  for (let i = 1; i <= 4; i++) {
+    required.push(
+      `Player${i}Name`,
+      `Player${i}HeSheThey`,
+      `Player${i}Class`,
+      `Player${i}Weapon`,
+      `Player${i}Damage`
+    );
+  }
+  if (required.some(k => !params.get(k))) {
+    window.location.href = `fix.html?${params}`;
+  }
+
+  // 4) define real globals for Player1…Player4
+  const players = [];
+  for (let i = 1; i <= 4; i++) {
+    const rawName  = params.get(`Player${i}Name`)    || "";
+    const rawPron  = params.get(`Player${i}HeSheThey`)|| "";
+    const rawClass = params.get(`Player${i}Class`)   || "";
+    const rawWeap  = params.get(`Player${i}Weapon`)  || "";
+    const rawDmg   = params.get(`Player${i}Damage`)  || "";
+
+    const Name      = cap(lc(rawName));
+    const HeSheThey = lc(rawPron);
+    const Class     = cap(lc(rawClass));
+    const Weapon    = cap(lc(rawWeap));
+    const Damage    = lc(rawDmg);
+
+    const pfx = pronounSet(HeSheThey);
+
+    // expose as globals
+    window[`Player${i}Name`]          = Name;
+    window[`Player${i}HeSheThey`]     = pfx.HeSheThey;
+    window[`Player${i}HimHerThem`]    = pfx.HimHerThem;
+    window[`Player${i}HisHerTheir`]   = pfx.HisHerTheir;
+    window[`Player${i}HisHersTheirs`] = pfx.HisHersTheirs;
+    window[`Player${i}WasWere`]       = pfx.WasWere;
+    window[`Player${i}DoesDo`]        = pfx.DoesDo;
+    window[`Player${i}HasHave`]       = pfx.HasHave;
+    window[`Player${i}Class`]         = Class;
+    window[`Player${i}Weapon`]        = Weapon;
+    window[`Player${i}Damage`]        = Damage;
+
+    // also collect into players[] for the top display
+    players.push({Name, HeSheThey, Class, Weapon, Damage});
+  }
+
+  // 5) render the top summary
+  document.getElementById("customDisplay").innerHTML =
+    players.map((p, i) =>
+      `<strong>Player ${i+1}:</strong> ${p.Name} — 
+       <em>${p.HeSheThey}</em> | Class: ${p.Class} | Weapon: ${p.Weapon} | Damage: ${p.Damage}`
+    ).join("<br>");
+
+  // --- NEW: storyText with delimiter and per-segment copy buttons ---
+  const storyText = `Our adventurers  tramped through the forest, their spirits surprisingly high despite the persistent damp in the air. 
+
+They rounded a bend in the path and found themselves facing a small, gurgling creek. It wasn't particularly wide, maybe only 20 feet across, but an immaculate log bridge offered a tempting, dry crossing. "Perfect!" declared ${Player1Name}, brushing a stray leaf from ${Player1HisHerTheir} tunic. "Beats getting our fur soggy."
+
+As they approached, a low, guttural grumble echoed from beneath the bridge. Suddenly, a creature, no bigger than a barrel but infinitely more lumpy, hoisted itself into view. It was a troll, gnarled and moss-flecked, with eyes like startled marbles and a nose that seemed to be growing a beard of its own. 
+
+${Player4Name} the ${Player4Class} of the group, had ${Player4HisHerTheir} ${Player4Weapon} half-drawn before ${Player3Name} gently put a hand on ${Player4HisHerTheir}  arm. "Hold on, ${Player4Name}. Trolls are usually docile. Let's see what it has to say first."
+
+The troll puffed out its chest, which mostly consisted of warty protrusions. "HA! Think ye can just stroll across MY bridge?" it croaked, its voice like gravel in a blender. "I, Grungle the Magnificent, built this engineering marvel with my own two hands! Sweated over every splinter! You want to pass? You pay! Gold, shiny gold, or face… THE CURSE!" Grungle punctuated this with a dramatic, if slightly wheezy, cough. "A terrible curse of… soggy fur for all yer life!"
+
+While Grungle aggressively prattled on about the structural integrity of his log — "Finest oak, hand-selected from a tree that was already dead, mind you, very ethical!" — ${Player2Name} frowned, tilting ${Player2HisHerTheir} head. "Did anyone else hear that?" ${Player2HeSheThey}  murmured, more to ${Player2HimHerThem}self than the group.
+
+"Hear what,${Player2Name}?" ${Player1Name} asked, trying to figure out if Grungle's 'curse' was covered by their adventuring insurance.
+
+"A-a scream," ${Player2Name} clarified, ${Player2HisHerTheir} brow furrowed. "Faint. Off to the left, deeper in the woods. Like someone needs help."
+
+Grungle paused his monologue about the excellent view from under his bridge. "Screams? Pah! Probably just a lost squirrel. Now, about that gold..."
+
+“We are on a mission, remember?” ${Player3Name}  says, half-heartedly.
+
+
+"My gut says we should check it out," ${Player2Name} insisted, ${Player2HisHerTheir} usual calm replaced by a rare urgency. "It felt... genuine. Not a squirrel."
+
+${Player1Name}  sighed, rubbing ${Player1HisHerTheir} temples. "Right. So, options. One: Pay the troll, who may or may not be suffering from delusions of grandeur and a bad case of swamp gas. Two: Wade through the creek, which will be freezing, soul-crushingly cold, and probably lead to us all catching something unpleasant. Or three: Veer off course, investigate a scream that might just be a particularly dramatic bird, and potentially get into actual danger."
+
+"My ${Player4Weapon} is ready for actual danger," ${Player4Name} chimed in, brandishing their ${Player4Weapon} a little too enthusiastically, almost taking out a low-hanging branch.
+
+"And my wallet is ready for not paying extortionate bridge tolls," ${Player3Name} mumbled. "Though, if we wade, we'll be wet for hours. And Grungle does look like he genuinely believes he's a master craftsman."
+
+Grungle, meanwhile, was now practicing a series of 'evil snarls' that mostly resulted in him looking constipated. The adventurers looked at each other, a silent debate passing between them as the faint possibility of genuine peril warred with the certainty of a cold, wet crossing or an absurd toll.
+`.trim();
+
+  // split into segments and render them with copy buttons
+  const delimiter = "←—------------------- copy break—----------------->";
+  const segments  = storyText.split(delimiter);
+  const storyBox  = document.getElementById("storyBox");
+
+  storyBox.innerHTML = ""; // clear
+
+  segments.forEach((text) => {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "story-segment";
+
+    const pre = document.createElement("pre");
+    pre.textContent = trimmed;
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.textContent = "Copy";
+    btn.className = "storyButton";
+    btn.addEventListener("click", () => {
+      navigator.clipboard.writeText(trimmed)
+        .then(() => {
+          btn.textContent = "Copied!";
+          setTimeout(() => btn.textContent = "Copy", 1200);
+        })
+        .catch(() => {
+          btn.textContent = "Copy failed";
+          setTimeout(() => btn.textContent = "Copy", 1200);
+        });
+    });
+
+    wrapper.append(pre, btn);
+    storyBox.appendChild(wrapper);
+  });
+
+  // 7) actions & UI (unchanged from your template2)
+  const actions = [
+    {
+      name:      "Pay the Toll",
+      condition: "Requires 2 large copper",
+      prompt:    `The adventurers stood before the bridge, the troll’s demand for coin echoing. ${Player1Name} sighed, "Just pay the troll, it's easier." `,
+      result:    `Aiming for true heroism, the Aries decided that paying the troll was the most honorable path across his bridge. They reasoned payment was certainly more civilized than an entirely unnecessary, messy brawl.
+${Player2Name}, however, was still uneasy, wondering if true danger was out in the other direction. Yet, the consensus was to remain focused; heroes shouldn't be derailed by every potentially false alarm in the woods.
+Thus, Grungle the Troll, a connoisseur of convenient coin, was duly paid. He boomed his thanks for their copper with a delightful enthusiasm for outright extortion. He halfheartedly wished them easy travel through the rest of the Sage Forest.
+The hefty creature, pleased with his little grift, then gleefully tossed their coins skyward and deftly caught the jingling tribute, a performance of pure, unadulterated trollish satisfaction, much to his own amusement.
+With the transaction complete and the bridge now dutifully crossed, the four adventurers, a little lighter in their coin purses, continued their quest. They trudged onward, deeper into the mysterious Sage Forest.
+`,
+      next:      { label: "Continue", url: "i" }
+    },
+    {
+      name:      "Brave the Cold",
+      condition: "Always available",
+      prompt:    `But ${Player4Name} scoffed, "Nonsense! We'll just wade through the icy water."
+
+ "And catch our death of a cold?" snorted  ${Player3Name}. 
+
+The troll nodded vigorously, "Indeed! My bridge is very pretty and safe! Free of Curses unlike these waters!"
+`,
+      result:    `Hesitantly, the others followed, each yelp of cold swallowed by the rushing current. ${Player4Name} wailed, “We’ll all catch the plague and perish right here! Our adventure ends with pneumonia!” 
+
+But ${Player3Name} splashed back, “Nonsense, ${Player4Name}! The Adventurer’s Guild covers healing of all sorts, provided we actually complete this quest. Besides, a little sniffle builds character, and saves coin!”
+
+Meanwhile, from his dry, perfectly comfortable perch on the bridge, Grungle the troll bellowed with mirth. “Tightwads! Idiots! Freezing your tails when a few paltry coins would grant safe passage!” 
+He punctuated his taunts by theatrically hawking a truly magnificent loogie, which he then launched with surprising accuracy into the current. The viscous, greenish blob drifted lazily downstream, an unpleasant, unsolicited gift heading straight for the adventurers.
+
+They soldiered on, the chest-high water sapping their resolve with every frigid step. Finally, sputtering and gasping, they clambered onto the muddy bank, drenched not just in icy brook water, but also a fine, green film of river slime and, to their utter disgust
+
+
+. Their fur, once their pride, now hung in pathetic, dripping clumps, heavy with cold and resentment. A violent sneeze erupted from ${Player2Name}, echoing forlornly through the damp forest air. 
+He shivered uncontrollably, his teeth chattering like castanets. “You know,” ${Player2HeSheThey} sniffled, wiping ${Player2HisHerTheir} nose with a soaked sleeve, “I think I would have rather paid that insufferable, phlegm-flinging wretch after all.” 
+
+With a collective groan and many more shivers, the four adventurers, squelching audibly with every step, trudged deeper into the chilly, unforgiving woods.
+ 
+All Players Take 1 Damage
+`,
+      next:      { label: "Continue", url: "i" }
+    },
+    {
+      name:      "Follow the Screams",
+      condition: "Always available",
+      prompt:    `${Player2Name} insisted, "But what about that voice? Someone might be in danger!" The others exchanged glances, not convinced. 
+
+"Likely just the wind or a badger," ${Player3Name} countered, "and a wild goose chase will only pull us further from our actual quest."
+`,
+      result:    `${Player1Name} huffs, "We can hardly call ourselves heroes if we ignore  a distress call, can we?" The others nodded solemnly, momentarily forgoing their urgent quest.
+Grungle, the bridge troll whose breath smelled perpetually of damp moss and questionable fish  groans, "You lot are proper idiots, you know that?" he rumbled, eyeing their youthful faces. "Getting yourselves lost in the forest  over a little yelp? You'll be back here begging to cross my immaculate bridge, mark my words, and I'll charge double!" His jaded pronouncements hung in the air, thick with the scent of his unwashed warts.
+Despite Grungle’s wise, if rather smelly, advice, the adventurers exchanged determined glances. 
+"He simply doesn't understand the call of duty," shrugs ${Player2Name}. ${Player3Name} merely grunted in amusement. With a collective shrug, they turned their backs on the grumbling troll and the sturdy, safe bridge.
+ Their hooves crunched on fallen leaves as they plunged headfirst into the dense, ominous foliage, to search for the source of the screams.
+`,
+      next:      { label: "Continue", url: "l" }
+    },
+    {
+      name:      "Bully the troll",
+      condition: "Requires ability to do damage with weapon or spell",
+      prompt:    `{Player1Name} raised a hand. "Killing seems excessive; we could simply overpower the brute and cross without lining his pockets."
+
+"Overpowering isn't exactly heroic, THREE," FOUR chided, shaking her head. The troll, who had been listening intently, turned beat red with anger. "Ya dirty goats! You're playing dangerous with your threats of violence. I curse you! I curse you and your kin!" He starts ranting, but doesn't make a move to attack. He seems like he wouldn't put up much of a fight.
+`,
+      result:    ` "Honestly, bullying a troll for passage feels somewhat… dishonorable," mused ${Player2Name}. 
+
+But ${Player3Name} scoffed, "Dishonorable? That lout Grungle deserves no such courtesy, not when he charges an arm and a leg merely to traverse a few planks over a muddy creek. We'll simply persuade him to see reason."
+
+ Their decision, though debated, was made: they would cross for free.
+As the adventurers took their first confident steps onto the creaking timbers, the hulking, mossy Troll indeed blocked their path. Grungle, predictably furious, spread his arms wide, a guttural growl rumbling in his chest, demanding his exorbitant toll. 
+
+Not one to waste time on pleasantries, ${Player1Name} fixed him with a truly impressive scowl, a silent but potent warning. When the dim-witted troll merely grunted defiance. ${Player4Name} with a surge of strength, simply shoved him.
+With a rather undignified splash, the portly troll tumbled into the murky current below, his indignant bellow quickly muffled by the water. The adventurers, suppressing their outright guffaws into a series of snickers and knowing glances, continued their unhindered procession across the now-free bridge.
+
+ As they casually strode to the other side, Grungle, emerging sputtering from the riverbank, started a tirade of truly imaginative, albeit somewhat slurred, curses, his voice echoing across the water. “Curse you! You damned goats! May the Eye curse you and your lineage!” he bellows.
+Their victory, petty though it might have been, was undeniably sweet. Peals of triumphant laughter erupted from the group as they stepped off the far side of the bridge, the last of Grungle's furious shouts fading behind them.
+
+ With pockets heavier for having not paid a single copper, and spirits lighter from their minor act of brigandry, the jubilant adventurers swaggered onward, disappearing into the shadowed embrace of the ancient forest, already eager for whatever irreverent escapade lay next.
+`,
+      next:      { label: "Continue", url: "i" }
+    },
+    {
+      name:      "Kill the troll",
+      condition: "Requires ability to do damage with weapon or spell",
+      prompt:    `${Player4Name} grumbled, drawing ${Player4HisHerTheir} ${Player4Weapon}. "Or, we could just remove the problem. Permanently."  `,
+      result:    `The adventurers, after much deliberation, decided that Grungle the bridge troll's continued existence was a net negative for the local economy and traveler morale
+
+${Player1Name} mumbled “This doesn't feel  particularly heroic,” but ${Player4Name}, quite adamantly, insisted, “Killing monsters is precisely what heroes do.”
+
+ Grungle, sensing his entrepreneurial dreams were about to be violently dashed, shrieked, "You can't do that, you brutes!"
+Despite Grungle's rather compelling  argument, the adventurers took a step onto the rickety bridge. The troll, clearly not a fan of property rights being violated, lumbered into their path, cursing like a sailor who'd just lost his last doubloon. 
+Before Grungle could fully articulate his demands for compensation, one adventurer, clearly having skipped the 'negotiation tactics' lesson at the guild, drew a glinting blade. Grungle attempted to flee, but was swiftly intercepted and delivered a blow from ${Player4Name}’s ${Player4Weapon} that was, shall we say, less than sportsmanlike.
+
+A shriek, utterly devoid of any melodious quality, ripped from Grungle's throat as he stumbled, bleeding rather inelegantly onto his beloved bridge. The other adventurers, suddenly fascinated by their hooves or the intricate patterns on the distant trees, managed to avoid direct eye contact.
+
+ ${Player4Name}, however, clearly had a job to finish. With a rather unceremonious hoof to the ribs of the prone troll, the adventurer raised the${Player4Weapon} once more, bringing it down with a finality that suggested a deep personal vendetta against bridge-based extortionists.
+
+The now-silent troll was then unceremoniously punted into the murky water below, which promptly bloomed into a  gruesome swirl of black and crimson. 
+The adventurers continued their journey, now unburdened by a toll, yet perhaps slightly weighed down by the distinct flavor of moral ambiguity. As they vanished into the dappled shade of the forest, the only sound was the faint gurgle of the river, washing away the evidence, and perhaps a tiny bit of their youthful idealism.
+ 
+The blood of the innocent Grungle’s life is stained onto the hands of the adventurers forever more.
+`,
+      next:      { label: "Continue", url: "i" }
+    },
+    {
+      name:      "Feed the troll",
+      condition: "Requires item: Ration",
+      prompt:    `${Player3Name}, a practical Aries, rummaged through ${Player3HisHerTheir} pack. "Hold on, I have extra rations. Perhaps a generous offering of dried meat and stale biscuits would allow us to cross nobly, without emptying our precious reserves."
+
+The look on the Troll’s face seems to strengthen that argument. His stomach growls loudly.`,
+      result:    `Deciding the bridge offered the swiftest path, the adventurers approached Grungle, the coin-hungry bridge troll. Instead of surrendering their hard-earned coin, they opted for a less traditional toll. 
+With a flourish, ${Player3Name} produced a humble but appealing portion of ${Player3HisHerTheir} rations. Grungle’s usually dull eyes gleamed, instantly captivated by the prospect of fresh food, a stark contrast to his usual diet of rats and squirrels and stale river weeds.
+
+Seizing the troll’s momentary distraction, ${Player1Name} boldly offered, "We'll give you this delicious fare, but only if you promise never to charge us for crossing your bridge again." 
+Grungle, still mesmerized by the aroma, paused, his thick and rocky brow furrowing in a rare display of thought. "This... this is not truly worth the coin," he grumbled, clearly torn between immediate gratification and his established business model.
+
+${Player2Name} jumped in, "Ah, but you'll have it now, Grungle, no tiresome trek to the village required. Consider it a premium charge for delivery and sheer convenience!"
+ The troll’s stomach, however, proved to be the most persuasive argument, delivering a thunderous gurgle that swayed his decision. "Fine, fine! Just go ahead," he relented, snatching the offered meat and bread taking a delighted, cavernous bite into its soft form.
+
+Grungle’s face, usually a picture of sullen avarice, transformed into pure glee as he savored the Aries' expertly baked and prepared meal – far superior to typical troll fare. 
+Promising to divide their remaining meals so none would go without, the adventurers swiftly crossed the now free bridge. As they ventured deeper into the forest, the melodic, happy grunts and smacking sounds of a truly satisfied troll echoed pleasantly from behind them, a testament to a surprisingly successful negotiation.
+Consumes Item: Ration
+`,
+      next:      { label: "Continue", url: "i" }
+    }
+  ];
+
+  const grid     = document.getElementById("optionGrid");
+  const resBox   = document.getElementById("resultBox");
+  const resTitle = document.getElementById("resultTitle");
+  const resText  = document.getElementById("resultText");
+  const resAct   = document.getElementById("resultActions");
+
+  actions.forEach((act, idx) => {
+    const box = document.createElement("div");
+    box.className = "option-box";
+    box.innerHTML = `
+      <h3>${act.name}</h3>
+	<hr>
+      <p><strong>Condition:</strong> ${act.condition}</p>
+      <p>${act.prompt}</p>
+      <div class="button-group">
+        <button class="storyButton" onclick="showResult(${idx})">Proceed</button>
+        <button class="storyButton" onclick="copyPrompt(${idx})">Copy Prompt</button>
+      </div>
+    `;
+    grid.appendChild(box);
+  });
+
+  function showResult(idx) {
+    const act = actions[idx];
+    resTitle.innerText = `Result: ${act.name}`;
+    resText.innerText  = act.result;
+    resAct.innerHTML   = "";
+
+    const nexts = Array.isArray(act.next) ? act.next : [act.next];
+    nexts.forEach(({label, url}) => {
+      const btn = document.createElement("button");
+      btn.className = "storyButton";
+      btn.innerText = label;
+      btn.onclick   = () => goToPage(url);
+      resAct.appendChild(btn);
+    });
+
+    const copyBtn = document.createElement("button");
+    copyBtn.className = "storyButton";
+    copyBtn.innerText = "Copy Result";
+    copyBtn.onclick   = copyResult;
+    resAct.appendChild(copyBtn);
+
+    resBox.style.display = "block";
+  }
+
+  function copyPrompt(idx) {
+    navigator.clipboard.writeText(actions[idx].prompt)
+      .then(() => alert("Prompt copied!"))
+      .catch(() => alert("Copy failed."));
+  }
+
+  function copyResult() {
+    navigator.clipboard.writeText(resText.innerText)
+      .then(() => alert("Result copied!"))
+      .catch(() => alert("Copy failed."));
+  }
+
+  const title = "Tainted Spring: Bridge Crossing";
+  document.getElementById("pageTitle").innerText   = title;
+  document.getElementById("promptTitle").innerText = title;
+
+  function goToFix()    { window.location.href = `fix.html?${params}`; }
+  function goToPage(pg){ window.location.href = `${pg}.html?${params}`; }
+
+  // copy full story text
+  function copyStory(){
+    navigator.clipboard.writeText(storyText)
+      .then(() => alert("Story copied!"))
+      .catch(() => alert("Copy failed."));
+  }
+</script>
+
+</body>
+</html>
+

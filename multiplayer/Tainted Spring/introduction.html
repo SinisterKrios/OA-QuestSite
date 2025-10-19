@@ -3,89 +3,38 @@
 <head>
   <meta charset="utf-8">
   <title id="pageTitle">Multiplayer Prompt</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="../../style.css">
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 30px;
-      text-align: center;
-      background: #e3dba2;
-      color: #967e00;
-    }
     .storyButton {
-      margin: 5px;
-      padding: 8px 12px;
-      font-size: 14px;
-      border: 2px solid #967e00;
-      background: #faf1ab;
-      color: #967e00;
-      cursor: pointer;
-      border-radius: 4px;
+	width: 100%;
+	color: white;
     }
     .storyButton:hover {
       background: #ffffff;
     }
     article {
       max-width: 1000px;
-      margin: auto;
     }
-    #customDisplay {
-      margin: 20px auto;
-      font-size: 16px;
-      line-height: 1.4;
-      background: #faf4c7;
-      padding: 15px;
-      border-radius: 8px;
-      border: 2px solid #967e00;
-      text-align: left;
-    }
-    .story {
-      margin: 30px auto;
-      max-width: 1000px;
-      font-size: 18px;
-      line-height: 1.6;
-      background-color: #ffffff;
-      padding: 20px;
-      border-radius: 10px;
-    }
-.story-segment {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.5em;
-  margin-bottom: 1em;
-}
-
-.story-segment p {
-  flex: 1;
-  margin: 0;
-  padding: 0.5em;
-  background: #faf4c7;
-  border: 2px solid #967e00;
-  border-radius: 4px;
-  white-space: pre-wrap;
-}
-
-.story-segment button {
-  flex-shrink: 0;
-  padding: 0.5em 1em;
-  font-size: 14px;
-  background: #967e00;
-  color: #faf1ab;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.story-segment button:hover {
-  background: #e48198;
+button{
+	width: 50%;
 }
 
   </style>
 </head>
 <body class="prompt">
 <article>
+<div class="container">
+
+<img src="https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/i/71515031-3f45-4117-abcd-a4fc1856b7d7/d6501sy-73956cdd-e523-4ac3-9b77-6d2c6ca2bab7.gif">
+  <div>
   <h2 id="promptTitle">Your Prompt Title Here</h2>
   <p>By Tenshilove</p>
+</div>
+<img src="https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/i/71515031-3f45-4117-abcd-a4fc1856b7d7/d6501sy-73956cdd-e523-4ac3-9b77-6d2c6ca2bab7.gif">
+
+</div>
+
+<hr>
 
   <div id="customDisplay"></div>
   <button class="storyButton" onclick="goToFix()">Fix Parameters</button>
@@ -97,7 +46,7 @@
   </div>
 
   <!-- REPLACED: single button linking to a.html with all params -->
-  <button class="storyButton" onclick="goToPage('a')">Continue</button>
+  <button class="storyButton" onclick="goToPage('1')">Continue</button>
 </article>
 
 <script>
@@ -173,7 +122,7 @@
     ).join("<br>");
 
   // 6) story injection
-  const storyText = `	The air hung heavy and still over Prariedale, a village nestled deep within the ancient forests of the Sage Kingdom. Sunlight, usually dappling through the canopy in playful streaks, seemed to struggle to pierce the gloom, casting the small cluster of homes in a perpetual twilight. It was into this sleepy village that ${Player1Name}, ${Player2Name}, ${Player3Name} and ${Player4Name}, a party of young adventurers brimming with a mix of youthful idealism and earnest determination, ventured into.
+  const storyText = `The air hung heavy and still over Prariedale, a village nestled deep within the ancient forests of the Sage Kingdom. Sunlight, usually dappling through the canopy in playful streaks, seemed to struggle to pierce the gloom, casting the small cluster of homes in a perpetual twilight. It was into this sleepy village that ${Player1Name}, ${Player2Name}, ${Player3Name} and ${Player4Name}, a party of young adventurers brimming with a mix of youthful idealism and earnest determination, ventured into.
 
 
 
@@ -197,7 +146,7 @@ A flicker of a thought crossed ${Player4Name}’s mind, a brief, unsettling ques
 
 
 
-${Player3Name}, with ${Player3HisHerTheir} bright, reassuring smile that hadn’t quite faded despite the dismal surroundings, shook ${Player3HisHerTheir} head gently. "No, I don't think so, ${Player4Name}. The quest scroll was quite specific. It's a problem with their water. We will be careful not to drink it, and we should be okay." ${cap(Player3HisHerTheir)} confidence, though slightly forced in the face of such widespread misery, was enough to soothe ${Player4Name}’s immediate fears. Prariedale needed their strength, not their apprehension.
+${Player3Name}, with a reassuring smile that didn’t quite reach ${Player3HisHerTheir} eyes, shook ${Player3HisHerTheir} head gently. "No, I don't think so, ${Player4Name}. The quest scroll was quite specific. It's a problem with their water. We will be careful not to drink it, and we should be okay." ${cap(Player3HisHerTheir)} confidence, though slightly forced in the face of such widespread misery, was enough to soothe ${Player4Name}’s immediate fears. Prariedale needed their strength, not their apprehension.
 
 ←—------------------- copy break—----------------->
 
@@ -251,7 +200,7 @@ With the Elder’s directions roughly sketched, and the promise of a powerful re
 
 By mid-morning, with the sun a pale disc through the thinning canopy, and no sign of the Great Eye, they stepped out of Prariedale and into the whispering woods. The path was overgrown, less used than it should be, a testament to the village's isolation and fear. The air grew cooler, carrying the damp scent of autumn and decaying leaves, overlaid with a faint, unsettling tang that was not quite natural. Their goal was clear: find whatever was tainting the natural spring and cure it if they could – or return to report their findings if the task proved too great for their immediate abilities. Hope for Prariedale lay in their hands, deep within the shadows of the Sage Kingdom forest.
 
-←—------------------- copy break—----------------->
+
 `.trim();
   
 // 6a) split storyText into segments
@@ -325,9 +274,16 @@ document.addEventListener('DOMContentLoaded', () => {
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.textContent = 'Copy';
-      btn.addEventListener('click', () =>
-        navigator.clipboard.writeText(segment)
-      );
+btn.addEventListener('click', () => {
+  navigator.clipboard.writeText(segment)
+    .then(() => {
+      alert("Story copied!");
+    })
+    .catch(() => {
+      alert("Copy failed.");
+    });
+});
+
 
       wrapper.append(pre, btn);
       container.appendChild(wrapper);

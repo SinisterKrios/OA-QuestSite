@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title id="pageTitle">Multiplayer Prompt</title>
+  <link rel="stylesheet" href="../../style.css">
+  <style>
+/* container and segment sizing */
+.story {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.story-segment {
+  background: #676767;            /* match your dark box look if needed */
+  color: #eee;
+  border-radius: 6px;
+  padding: 1rem;
+  margin: 0.75rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+/* preserve newlines but allow wrapping so lines don't grow horizontally */
+.story-segment pre {
+  white-space: pre-wrap;      /* preserves newlines and allows wrapping */
+  word-break: break-word;
+  margin: 0;
+  font-family: serif;         /* match your aesthetic from template */
+  line-height: 1.4;
+  max-height: 240px;          /* limit visible height */
+  overflow: auto;             /* enable internal scrolling if needed */
+  padding-right: 0.25rem;     /* room for scrollbar */
+}
+
+/* keep the copy button sized and aligned */
+.story-segment .storyButton {
+  align-self: flex-end;
+  padding: 0.35rem 0.8rem;
+  font-size: 0.95rem;
+  border-radius: 6px;
+  width: auto;
+  min-width: 72px;
+background-color: #303030;
+}
+
+
+    .button-group {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: auto;
+    }
+    #copyBuffer {
+      position: absolute;
+      left: -9999px;
+    }
+    .option-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      margin-top: 30px;
+    }
+    .option-box {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background: #676767;
+      border: 2px solid #303030;
+      border-radius: 8px;
+      padding: 15px;
+      text-align: left;
+      min-height: 280px;
+    }
+    .option-box h3 {
+      margin-top: 0;
+      color: #ffffff;
+    }
+    .option-box p {
+      margin: 8px 0;
+    }
+    .result-box {
+      display: none;
+      margin-top: 30px;
+      background: #676767;
+      border: 2px solid #303030;
+      border-radius: 8px;
+      padding: 20px;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+      text-align: left;
+    }
+    .result-box h3 {
+      margin-top: 0;
+      color: #ffffff;
+    }
+    #resultActions {
+      margin: 15px 0;
+    }
+	button{
+		color: white;
+}
+.option-grid{
+	background-color: #303030;
+	padding: 20px;
+}
+.option-box button{
+	background-color: #303030;
+}
+
+/* container: place buttons side-by-side */
+.button-group, #resultActions{
+  display: flex;
+  gap: 10px;
+  align-items: stretch; /* ensure children fill cross axis */
+}
+
+/* make every button share space and have identical height */
+.button-group .storyButton, #resultActions button{
+  flex: 1 1 0;         /* grow and shrink equally, no base width bias */
+  min-width: 0;        /* allow proper shrinking inside grid */
+  box-sizing: border-box;
+  height: 48px;        /* fixed height so all match exactly */
+  padding: 0 1rem;     /* horizontal padding only (vertical controlled by height) */
+  display: inline-flex;
+  align-items: center; /* center label vertically */
+  justify-content: center;
+  border-radius: 8px;
+background-color: #303030;
+}
+
+.option-box hr{
+  border: none;
+  height: 1px;
+  background: #ccc;        /* line color */
+  margin: 0;          /* spacing */
+  display: block;  
+}
+
+  </style>
+</head>
+<body class="prompt">
+<article>
+<div class="container">
+
+<img src="https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/i/71515031-3f45-4117-abcd-a4fc1856b7d7/d6501sy-73956cdd-e523-4ac3-9b77-6d2c6ca2bab7.gif">
+  <div>
+  <h2 id="promptTitle"></h2>
+  <p>By Tenshilove</p>
+</div>
+<img src="https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/i/71515031-3f45-4117-abcd-a4fc1856b7d7/d6501sy-73956cdd-e523-4ac3-9b77-6d2c6ca2bab7.gif">
+
+</div>
+
+<hr>
+
+  <div id="customDisplay"></div>
+  <button class="storyButton" onclick="goToFix()">Fix Parameters</button>
+  <button class="storyButton" onclick="goToPage('index')">To Index</button>
+
+  <div class="story">
+    <div id="storyBox"></div>
+    <button class="storyButton" onclick="copyStory()">Copy Story</button>
+  </div>
+
+  <div class="option-grid" id="optionGrid"></div>
+
+  <div class="result-box" id="resultBox">
+    <h3 id="resultTitle"></h3>
+    <p id="resultText"></p>
+    <div id="resultActions"></div>
+  </div>
+
+  <textarea id="copyBuffer"></textarea>
+</article>
+
+<script>
+  // 0) pull URL params
+  const params = new URLSearchParams(window.location.search);
+
+  // 1) simple casing helpers
+  const lc  = s => (s||"").toLowerCase();
+  const cap = s => (s||"")[0]?.toUpperCase() + (s||"").slice(1);
+
+  // 2) pronounSet → flat keys your template expects
+  function pronounSet(subj) {
+    subj = lc(subj);
+    switch (subj) {
+      case "she":  return { HeSheThey:"she", HimHerThem:"her", HisHerTheir:"her", HisHersTheirs:"hers", WasWere:"was", DoesDo:"does", HasHave:"has" };
+      case "he":   return { HeSheThey:"he",  HimHerThem:"him",  HisHerTheir:"his",  HisHersTheirs:"his", WasWere:"was",  DoesDo:"does", HasHave:"has" };
+      case "they": return { HeSheThey:"they",HimHerThem:"them",HisHerTheir:"their",HisHersTheirs:"theirs",WasWere:"were", DoesDo:"do",  HasHave:"have" };
+      default:     return { HeSheThey:"it",  HimHerThem:"it",   HisHerTheir:"its", HisHersTheirs:"its", WasWere:"was",  DoesDo:"does", HasHave:"has" };
+    }
+  }
+
+  // 3) ensure we got all params
+  const required = [];
+  for (let i = 1; i <= 4; i++) {
+    required.push(
+      `Player${i}Name`,
+      `Player${i}HeSheThey`,
+      `Player${i}Class`,
+      `Player${i}Weapon`,
+      `Player${i}Damage`
+    );
+  }
+  if (required.some(k => !params.get(k))) {
+    window.location.href = `fix.html?${params}`;
+  }
+
+  // 4) define real globals for Player1…Player4
+  const players = [];
+  for (let i = 1; i <= 4; i++) {
+    const rawName  = params.get(`Player${i}Name`)    || "";
+    const rawPron  = params.get(`Player${i}HeSheThey`)|| "";
+    const rawClass = params.get(`Player${i}Class`)   || "";
+    const rawWeap  = params.get(`Player${i}Weapon`)  || "";
+    const rawDmg   = params.get(`Player${i}Damage`)  || "";
+
+    const Name      = cap(lc(rawName));
+    const HeSheThey = lc(rawPron);
+    const Class     = cap(lc(rawClass));
+    const Weapon    = cap(lc(rawWeap));
+    const Damage    = lc(rawDmg);
+
+    const pfx = pronounSet(HeSheThey);
+
+    // expose as globals
+    window[`Player${i}Name`]          = Name;
+    window[`Player${i}HeSheThey`]     = pfx.HeSheThey;
+    window[`Player${i}HimHerThem`]    = pfx.HimHerThem;
+    window[`Player${i}HisHerTheir`]   = pfx.HisHerTheir;
+    window[`Player${i}HisHersTheirs`] = pfx.HisHersTheirs;
+    window[`Player${i}WasWere`]       = pfx.WasWere;
+    window[`Player${i}DoesDo`]        = pfx.DoesDo;
+    window[`Player${i}HasHave`]       = pfx.HasHave;
+    window[`Player${i}Class`]         = Class;
+    window[`Player${i}Weapon`]        = Weapon;
+    window[`Player${i}Damage`]        = Damage;
+
+    // also collect into players[] for the top display
+    players.push({Name, HeSheThey, Class, Weapon, Damage});
+  }
+
+  // 5) render the top summary
+  document.getElementById("customDisplay").innerHTML =
+    players.map((p, i) =>
+      `<strong>Player ${i+1}:</strong> ${p.Name} — 
+       <em>${p.HeSheThey}</em> | Class: ${p.Class} | Weapon: ${p.Weapon} | Damage: ${p.Damage}`
+    ).join("<br>");
+
+  // --- NEW: storyText with delimiter and per-segment copy buttons ---
+  const storyText = `As the adventurers continued on, the sounds of the forest around them was shattered by the guttural roars and violent crashing that echoed through the trees. 
+${Player3Name} signaled a halt,  ${Player3HisHerTheir} keen eyes scanning the dense undergrowth. Beside ${Player3HimHerThem}. “What is that?”
+${Player2Name}  gripped ${Player2HisHerTheir} ${Player2Weapon} tighter, a grimace on ${Player2HisHerTheir} face. “Careful! It could be trouble!”
+The sounds led them to a thorny, uneven ditch, where a creature of elemental power was thrashing in agony. It was a Rock Golem, a juvenile one, no taller than waist high on an adult Aries, but radiating a palpable distress. Its rocky hide, usually a stoic grey, was mottled with a sickly, greenish hue. Its eyes burned with a feverish, crimson light, and a foul-smelling, viscous liquid oozed from its stony maw, dripping onto the already trampled ground.
+${Player4Name} gasped, ${Player4HisHerTheir} heart clenching. "Oh, the poor thing! It's in so much pain!"
+${Player1Name} snorted, ${Player1HisHerTheir} gaze fixed on the golem's destructive fury. "Pain? That's pure, unadulterated rage. And look at it! It's disgusting! Dripping slime like a bog hag."
+${Player2Name}, however, was observing the scene with a different kind of intensity. ${cap(Player2HeSheThey)} noted the sluggishness in the golem's movements, the erratic spasms that shook its frame, and the way it clawed at its own rocky throat. "${Player1Name}, I understand your revulsion, but this isn't just anger; it's suffering." ${cap(Player2HeSheThey)} ran a hand over ${Player2HisHerTheir} chin, ${Player2HisHerTheir} eyes narrowing. "The spring water… This creature is sick. It's been drinking the tainted spring water for too long."
+
+The adolescent golem let out another pained bellow, slamming a boulder-like fist into the thorny thicket beside it, sending shards of bark and dirt flying. The intensity of its torment was undeniable.
+"So, what do we do?" ${Player3Name} asked,  "We have a job to do, and that's fixing the spring. If we can cleanse the water, this little terror will likely recover on its own."
+
+
+
+"On its own?" ${Player4Name} protested, her healer's instincts screaming. "Look at it! It's tearing itself apart! We can't just leave it to suffer like this. It's a child, a sick child!"
+
+"The problem is," ${Player1Name} grumbled, gesturing with ${Player1HisHerTheir} ${Player1Weapon} towards the raging golem, "getting close enough to 'help' it is a good way to get ourselves flattened. It's hardly in a state to accept a friendly handshake."
+A grim silence fell upon the group as the golem's pained roars continued.
+They stood at the edge of the thorny ditch, a tableau of concern and uncertainty. The adolescent Rock Golem continued its pained symphony of roars and crashes, a testament to the invisible poison seeping through the Sage Forest. They had come seeking to mend a failing spring, but now, they were faced with a more immediate, heartbreaking dilemma: how to best help a creature in a desperate fever. The path ahead was no longer just about fixing a broken source; it was about compassion, and the challenging question of what truly constituted help when faced with such raw, untamed suffering. 
+`.trim();
+
+  // split into segments and render them with copy buttons
+  const delimiter = "←—------------------- copy break—----------------->";
+  const segments  = storyText.split(delimiter);
+  const storyBox  = document.getElementById("storyBox");
+
+  storyBox.innerHTML = ""; // clear
+
+  segments.forEach((text) => {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "story-segment";
+
+    const pre = document.createElement("pre");
+    pre.textContent = trimmed;
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.textContent = "Copy";
+    btn.className = "storyButton";
+    btn.addEventListener("click", () => {
+      navigator.clipboard.writeText(trimmed)
+        .then(() => {
+          btn.textContent = "Copied!";
+          setTimeout(() => btn.textContent = "Copy", 1200);
+        })
+        .catch(() => {
+          btn.textContent = "Copy failed";
+          setTimeout(() => btn.textContent = "Copy", 1200);
+        });
+    });
+
+    wrapper.append(pre, btn);
+    storyBox.appendChild(wrapper);
+  });
+
+  // 7) actions & UI (unchanged from your template2)
+  const actions = [
+    {
+      name:      "Kill the Golem",
+      condition: "Always available",
+      prompt:    ` "We could… end its suffering," ${Player1Name} said softly, ${Player1HisHerTheir} voice barely audible. The suggestion hung in the air, heavy with unspoken implications.
+"Absolutely not!" ${Player2Name}’s voice was sharp, filled with righteous indignation. "It’s sick, ${Player1Name}, not a monster to be put down! We are heroes, not executioners!"`,
+      result:    ` Though it was hard to stomach, the adventurers decide the best thing for this creature is to be put out of its pain and miserably swiftly. ${Player2Name} couldn’t bear to watch so ${Player2HeSheThey} went on ahead of the others. ${cap(Player2HeSheThey)} heard the creatures wailing as they walked away, then it swiftly came to an end, leaving only melancholic silence in its place. 
+
+The others caught up to ${Player2HimHerThem} after a short moment, and the adventurers didn’t speak of it again.`,
+      next:      { label: "Continue", url: "p" }
+    },
+    {
+      name:      "Leave it be",
+      condition: "Always available",
+      prompt:    ` "We don’t have time for detours," ${Player2Name} says. We will heal the spring, that will do enough. We should leave it be.”
+
+${Player4Name} shakes  ${Player4HisHerTheir}  head, "It's thrashing around. It could hurt itself worse. And if it breaks free from this ditch… who knows what damage it could do, even in its pain."`,
+      result:    `Despite their urge to help the creature somehow, they knew that the spring was the cause of its distress, so hurrying to clean the water should be their priority. Reluctantly the Aries turned their back to the thrashing adolescent beast and continued on their way. They tried to tune out its noise until they were far enough to no longer hear it. `,
+      next:      { label: "Continue", url: "p" }
+    },
+    {
+      name:      "Heal it",
+      condition: "Requires healer with a heal spell and mana to use it",
+      prompt:    `HEALER stepped forward, hands glowing with a soft light. "I can try to soothe its pain with my magic. If I can calm it, perhaps it will stop harming itself." THEY looked at THEIR companions, THEIR eyes pleading. "It is in agony. It has likely consumed the toxic water for days, weeks even. It needs healing, not more violence."`,
+      result:    `HEALER hesitantly slipped down into the ditch. THEY watched as the Golem thrashed and whipped its body around. Black thick ooze dripped from its mouth onto its rocky body. The poor thing. It was delirious. HEALER inched closer, arms out stretched. Though the golem thrashed at and around THEM it didn't seem to be targeting them directly. It cried out and swung its arms and head, smashing into the walls of the ditch. “It’s alright,” HEALER says calmly. “Shh, it’s okay,” THEY had to quickly dodge a stray punch from the stony child, but were able to get their healing hands onto its body. 
+
+As soon as the glow of the healing magic lit up, the Golem slowed its thrashing and sat down on its rock butt. Its shouts of agony dulled into whines as the healing soothed its ache. “There, there,” HEALER smiled and gently stroked the creature’s head. “We will get you some clean water to drink soon, big guy.” THEY said. 
+
+“Come on!” The others helped HEALER out of the ditch and with a clear conscience and a happy mood they continued on their quest. 
+
+“What a waste of a healing spell,” ${Player3Name} sighs. 
+
+“Healing someone is never a waste, ${Player3Name}.” HEALER reminds them.`,
+      next:      { label: "Continue", url: "n" }
+    },
+    {
+      name:      "Put to sleep",
+      condition: "Requires mage with a necrotic spell and mana to cast it",
+      prompt:    `MAGE nodded, a flicker of inspiration in her eyes. "Or, if we want to minimize the risk, perhaps a bit of necrotic energy? Not to harm, but to sedate. A deep slumber might be what it needs. It would prevent it from hurting itself further until we can get the spring fixed."`,
+      result:    `The rocky form heaved as it vomited black, viscous ooze. 
+
+MAGE stepped forward, WANd/STAFF raised. THEY chanted a low, resonant spell, the air growing heavy with necrotic energy. The golem's desperate thrashing and piteous wails began to slow, then abruptly ceased. With a final, shuddering sigh, it slumped face-first into the mud, deep in an enchanted sleep. 
+
+"Ouch," winced ${Player3Name}, the sound a soft echo of the golem's pain. 
+
+They carefully clambered down into the ditch. "Let's try and get it into a more comfortable position," ${Player2Name} suggested, and together they gently adjusted the heavy, sleeping form. "It's all we can do for it now," ${Player4Name} said, a hint of sadness in ${Player4HisHerTheir} voice.
+
+ With their good deed done, they turned and continued their important quest to cleanse the tainted spring and bring clean water back to the village.`,
+      next:      { label: "Continue", url: "n" }
+    },
+    {
+      name:      "Feed the Golem",
+      condition: "Requires item: ration",
+      prompt:    `${Player3Name} rummaged through ${Player3HisHerTheir} pack. "Or, maybe it's just hungry and agitated. It's a young creature, after all. What if a meal would calm it down?" ${cap(Player3HeSheThey)} pulled out a chunk of dried meat, a traveler’s ration. "I could try to toss this to it from a distance.”`,
+      result:    `"If we can just pull it out of that panic," ${Player4Name} decided, offering up a loaf of bread from ${Player4HisHerTheir}  rations. 
+
+${Player1Name} cautiously volunteered for the dangerous task, sliding into the ditch with the food held high. "Be careful, ${Player1Name}!" ${Player4Name} whispered anxiously from above. 
+
+${Player1Name} waited until the creature had momentarily exhausted itself before gently pushing the loaf right in front of its face. The golem’s delirious thrashing ceased immediately, replaced by a curious whine, like the sound of grinding stone suffering a terrible headache. It snatched the bread, sat down heavily, and began to eat. 
+
+The desperate panic was gone, successfully traded for temporary satiation. With the creature calm, the others quickly hauled ${Player1Name} out, and the Aries continued their essential quest to cleanse the corrupted waters. 
+
+“Bread well spent, I'd say,” ${Player1Name} says.`,
+      next:      { label: "Continue", url: "n" }
+    },
+    {
+      name:      "Tie the Golem up",
+      condition: "Requires Item: rope",
+      prompt:    `“Or,” ${Player1Name}  suggests, “We use the rope to hog tie it. It will keep it from hurting itself or anyone else while we focus on curing the spring.”`,
+      result:    `It’s decided, they took up their rope and two of them slipped into the ditch, cautiously. The little rock creature roared at them and gripped its head with its thick stony fingers. The ooze dripped from its mouth as it writhed in agony. 
+
+${Player3Name} whistled to get its attention and the Golem charged at them aimlessly and tripped right into the rope that they and  ${Player2Name} had pulled taught between them both. It collapsed and began thrashing its arms and legs in the dirt. Quickly ${Player3Name} got on top of the creature, holding it down with ${Player3HisHerTheir} body weight so that ${Player2Name} could hog tie it effectively.
+
+When they were finished the stone golem had stopped flopping and fighting. They sat it up against the walls of the ditch where it couldn't hurt itself. 
+
+“At least now it wont cause any more harm,” ${Player2Name} huffs.
+
+“Poor thing,” ${Player1Name} sighs. With their jobs done they continue on through the forest, still hearing the cries of the creature as they go, until it’s bellows vanish into the trees. `,
+      next:      { label: "Continue", url: "p" }
+    }
+  ];
+
+  const grid     = document.getElementById("optionGrid");
+  const resBox   = document.getElementById("resultBox");
+  const resTitle = document.getElementById("resultTitle");
+  const resText  = document.getElementById("resultText");
+  const resAct   = document.getElementById("resultActions");
+
+  actions.forEach((act, idx) => {
+    const box = document.createElement("div");
+    box.className = "option-box";
+    box.innerHTML = `
+      <h3>${act.name}</h3>
+	<hr>
+      <p><strong>Condition:</strong> ${act.condition}</p>
+      <p>${act.prompt}</p>
+      <div class="button-group">
+        <button class="storyButton" onclick="showResult(${idx})">Proceed</button>
+        <button class="storyButton" onclick="copyPrompt(${idx})">Copy Prompt</button>
+      </div>
+    `;
+    grid.appendChild(box);
+  });
+
+  function showResult(idx) {
+    const act = actions[idx];
+    resTitle.innerText = `Result: ${act.name}`;
+    resText.innerText  = act.result;
+    resAct.innerHTML   = "";
+
+    const nexts = Array.isArray(act.next) ? act.next : [act.next];
+    nexts.forEach(({label, url}) => {
+      const btn = document.createElement("button");
+      btn.className = "storyButton";
+      btn.innerText = label;
+      btn.onclick   = () => goToPage(url);
+      resAct.appendChild(btn);
+    });
+
+    const copyBtn = document.createElement("button");
+    copyBtn.className = "storyButton";
+    copyBtn.innerText = "Copy Result";
+    copyBtn.onclick   = copyResult;
+    resAct.appendChild(copyBtn);
+
+    resBox.style.display = "block";
+  }
+
+  function copyPrompt(idx) {
+    navigator.clipboard.writeText(actions[idx].prompt)
+      .then(() => alert("Prompt copied!"))
+      .catch(() => alert("Copy failed."));
+  }
+
+  function copyResult() {
+    navigator.clipboard.writeText(resText.innerText)
+      .then(() => alert("Result copied!"))
+      .catch(() => alert("Copy failed."));
+  }
+
+  const title = "Tainted Spring: Raging Golem";
+  document.getElementById("pageTitle").innerText   = title;
+  document.getElementById("promptTitle").innerText = title;
+
+  function goToFix()    { window.location.href = `fix.html?${params}`; }
+  function goToPage(pg){ window.location.href = `${pg}.html?${params}`; }
+
+  // copy full story text
+  function copyStory(){
+    navigator.clipboard.writeText(storyText)
+      .then(() => alert("Story copied!"))
+      .catch(() => alert("Copy failed."));
+  }
+</script>
+
+</body>
+</html>
+

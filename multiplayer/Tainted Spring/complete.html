@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title id="pageTitle">Multiplayer Prompt</title>
+  <link rel="stylesheet" href="../../style.css">
+  <style>
+    .storyButton {
+	width: 100%;
+	color: white;
+    }
+    .storyButton:hover {
+      background: #ffffff;
+    }
+    article {
+      max-width: 1000px;
+    }
+button{
+	width: 50%;
+}
+
+  </style>
+</head>
+<body class="prompt">
+<article>
+<div class="container">
+
+<img src="https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/i/71515031-3f45-4117-abcd-a4fc1856b7d7/d6501sy-73956cdd-e523-4ac3-9b77-6d2c6ca2bab7.gif">
+  <div>
+  <h2 id="promptTitle">Your Prompt Title Here</h2>
+  <p>By Tenshilove</p>
+</div>
+<img src="https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/i/71515031-3f45-4117-abcd-a4fc1856b7d7/d6501sy-73956cdd-e523-4ac3-9b77-6d2c6ca2bab7.gif">
+
+</div>
+
+<hr>
+
+  <div id="customDisplay"></div>
+  <button class="storyButton" onclick="goToFix()">Fix Parameters</button>
+  <button class="storyButton" onclick="goToPage('index')">To Index</button>
+
+  <div class="story">
+    <div id="storyBox"></div>
+    <button class="storyButton" onclick="copyStory()">Copy Story</button>
+  </div>
+
+  <!-- REPLACED: single button linking to a.html with all params -->
+  <button class="storyButton" onclick="goToPage('index')">Continue</button>
+</article>
+
+<script>
+  // 0) pull URL params
+  const params = new URLSearchParams(window.location.search);
+
+  // 1) simple casing helpers
+  const lc  = s => (s||"").toLowerCase();
+  const cap = s => (s||"")[0]?.toUpperCase() + (s||"").slice(1);
+
+  // 2) pronounSet → flat keys your template expects
+  function pronounSet(subj) {
+    subj = lc(subj);
+    switch (subj) {
+      case "she":  return { HeSheThey:"she",  HimHerThem:"her",  HisHerTheir:"her",  HisHersTheirs:"hers", WasWere:"was",  DoesDo:"does",  HasHave:"has" };
+      case "he":   return { HeSheThey:"he",   HimHerThem:"him",  HisHerTheir:"his",  HisHersTheirs:"his", WasWere:"was",  DoesDo:"does",  HasHave:"has" };
+      case "they": return { HeSheThey:"they", HimHerThem:"them",HisHerTheir:"their",HisHersTheirs:"theirs",WasWere:"were", DoesDo:"do",   HasHave:"have" };
+      default:     return { HeSheThey:"it",   HimHerThem:"it",   HisHerTheir:"its", HisHersTheirs:"its", WasWere:"was",  DoesDo:"does",  HasHave:"has" };
+    }
+  }
+
+  // 3) ensure we got all params
+  const required = [];
+  for (let i = 1; i <= 4; i++) {
+    required.push(
+      `Player${i}Name`,
+      `Player${i}HeSheThey`,
+      `Player${i}Class`,
+      `Player${i}Weapon`,
+      `Player${i}Damage`
+    );
+  }
+  if (required.some(k => !params.get(k))) {
+    window.location.href = `fix.html?${params}`;
+  }
+
+  // 4) define globals for Player1…Player4 and build players[]
+  const players = [];
+  for (let i = 1; i <= 4; i++) {
+    const rawName  = params.get(`Player${i}Name`)     || "";
+    const rawPron  = params.get(`Player${i}HeSheThey`)|| "";
+    const rawClass = params.get(`Player${i}Class`)    || "";
+    const rawWeap  = params.get(`Player${i}Weapon`)   || "";
+    const rawDmg   = params.get(`Player${i}Damage`)   || "";
+
+    const Name      = cap(lc(rawName));
+    const HeSheThey = lc(rawPron);
+    const Class     = cap(lc(rawClass));
+    const Weapon    = cap(lc(rawWeap));
+    const Damage    = lc(rawDmg);
+
+    const pfx       = pronounSet(HeSheThey);
+
+    window[`Player${i}Name`]          = Name;
+    window[`Player${i}HeSheThey`]     = pfx.HeSheThey;
+    window[`Player${i}HimHerThem`]    = pfx.HimHerThem;
+    window[`Player${i}HisHerTheir`]   = pfx.HisHerTheir;
+    window[`Player${i}HisHersTheirs`] = pfx.HisHersTheirs;
+    window[`Player${i}WasWere`]       = pfx.WasWere;
+    window[`Player${i}DoesDo`]        = pfx.DoesDo;
+    window[`Player${i}HasHave`]       = pfx.HasHave;
+    window[`Player${i}Class`]         = Class;
+    window[`Player${i}Weapon`]        = Weapon;
+    window[`Player${i}Damage`]        = Damage;
+
+    players.push({Name, HeSheThey, Class, Weapon, Damage});
+  }
+
+  // 5) render the top summary
+  document.getElementById("customDisplay").innerHTML =
+    players.map((p, i) =>
+      `<strong>Player ${i+1}:</strong> ${p.Name} — <em>${p.HeSheThey}</em> | Class: ${p.Class} | Weapon: ${p.Weapon} | Damage: ${p.Damage}`
+    ).join("<br>");
+
+  // 6) story injection
+  const storyText = `If they saved the Foal
+
+As the party prepared to depart, their attention was drawn to a commotion near the edge of town. A distraught couple, their faces tear-streaked and relieved, rushed towards them. "You found him!" the mother cried, pulling the small, mud-spattered unicorn foal into a fierce embrace.
+
+The father, his voice thick with emotion, chided the boy, "Running off like that! We told you not to go near the forest!"
+
+The boy, however, was not repentant. His eyes, wide with admiration, were fixed on the adventurers. "They were so cool!" he gushed to his parents, "I'm going to be an adventurer like them when I grow up, and I won't run away then!" The adventurers exchanged warm smiles, their hearts touched by the child's sincere words and the immense relief of his parents.
+
+←—------------------- copy break—----------------->
+
+If they met the Foal but let him go without healing him
+
+As the adventurers packed their bags to leave Prairiedale, they were approached by a young mother, a unicorn. She pleaded to them asking if they had seen her son in the forest. That he had vanished recently and hasn't come home.
+
+They somberly told her that they had seen him but they weren’t sure where he is now.
+
+They heard several days later that the search party found the boy but it was too late to save him. The injury to his leg made him easy picking for the enraged monsters of the forest. Without healing he succumbed to his wounds.
+
+←—------------------- copy break—----------------->
+
+If they helped Darin but took the seed from him
+
+Weeks later, a traveling merchant from Prariedale brought news that cast a different light on their quest. The hunter Darin, who they had fought with in the forest, had lied about his intentions. He wasn't stealing the seed to help his family out of poverty; he was a petty thief, using the chaos of the blight to take advantage of the grieving sickly dryad. It turns out he was unmarried and didn't even have any children to care for.
+
+The merchant explained that Darin's luck had eventually run out, and he was caught trying to steal from the village’s church. He was now serving a long sentence in the Prairiedale jail, his supposed heroism revealed as a selfish scheme. The adventurers, remembering their conversations with the earnest "family man," felt a flicker of disgust at his deception, but ultimately, his fate felt like a fitting end.
+
+←—------------------- copy break—----------------->
+
+If they helped Darin retrieve the seed and let him keep it
+
+The news of the hunter Darin's deceit arrived with a sharp sting. A town council member, visiting a neighboring city on official business, saw Darin parading around as a newly-rich nobleman. His extravagant spending, the council member discovered, was a result of selling the Dryad's lost seed to a wealthy alchemist for an astronomical sum.
+
+The alchemist intended to grind the seed into a powerful medicinal powder, a fate tragic to the poor infant dryad and its grieving mother. After fighting with him about the decision to steal from their Dryad, Darin had decidedly abandoned his wife and daughter, leaving them to live in poverty while he embraced a new life of luxury.
+
+The adventurers' triumphant victory was tainted by the knowledge that their efforts to save the forest had inadvertently fueled one man's greed and left a family shattered.
+
+←—------------------- copy break—----------------->
+
+If they saved the Bard
+
+A year after the quest, one of the adventurers revisited the dreary inn, the Whispering Willow. Unlike before, the place was packed with music and laughter. Near the fire was the bard they had met in the mire, plucking a melody from his lute.
+
+The bard, now a celebrated musician, was singing the tale of the adventurers who vanquished the monster of the Sage Forest. The adventurer felt a deep sense of pride and contentment.
+
+←—------------------- copy break—----------------->
+
+If they met the Bard but didn't save him
+
+Some time later, the adventurers learned of the dreary bard's fate. A hunter found the bard's lute in the bog. Nearby, the bard's body was discovered. The bog had claimed another victim. The adventurers realized the forest's corruption was more insidious than they thought.
+
+←—------------------- copy break—----------------->
+
+If they returned the seed to the Dryad (or intended to)
+
+Word of the Sage Forest's healing eventually reached the adventurers. A traveling herbalist told them that, with her seed returned to her and the blight cleared, the Dryad had planted her seed.
+
+The forest responded with new life, and a giggling baby dryad was born. The Dryad was living in bliss with her child, nurturing the forest. This news brought warmth to the adventurers, a feeling that their actions had not only saved a village but led to a new life.
+
+←—------------------- copy break—----------------->
+
+If they stole the seed from the Dryad (or allowed Davin to keep it)
+
+Some time after their departure from Prariedale, a woodsman they had inquired had relayed that the Dryad of the Sage Forest had died.
+
+The townsfolk attributed her death to the lingering effects of the blight. The adventurers felt a pang of guilt. They had overlooked Dryad's suffering and prevented her from reuniting with her seed. They had a sinking feeling that her death was a result of loss of her will to live more than anything. The news was a stark reminder that some losses are irreparable.
+
+←—------------------- copy break—----------------->
+
+If they crossed Grungle’s Bridge and didn't kill him
+
+Some time after their adventure, a traveler brought surprising news. The bridge troll, Grungle, was now doing booming business. Trade and travel through the region had exploded. Grungle, the shrewd business-troll, was making a killing and planning to expand his bridge toll operation. The news of the troll's success brought a chuckle to the adventurers.
+
+←—------------------- copy break—----------------->
+The adventurers will always remember their quest through the Sage Forest. They faced many trials and a terrible monster and emerged victorious. The stories of their bravery, the lives they saved, and the friends and foes they made became a part of their legacy. They would be remembered as the heroes of Prairiedale. The adventures they shared would forever be etched in their hearts.
+
+The End`.trim();
+  
+// 6a) split storyText into segments
+const delimiter = "←—------------------- copy break—----------------->";
+const segments  = storyText.split(delimiter);
+const storyBox  = document.getElementById("storyBox");
+
+storyBox.innerHTML = ""; // clear out default plain text
+
+segments.forEach(text => {
+  const trimmed = text.trim();
+  if (!trimmed) return; // skip empty segments
+
+  // 6b) create wrapper for each piece
+  const wrapper = document.createElement("div");
+  wrapper.className = "story-segment";
+
+  // 6c) create the text node (preserves newlines)
+  const para = document.createElement("p");
+  para.innerText = trimmed;
+
+  // 6d) create the copy button
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.textContent = "Copy";
+  btn.addEventListener("click", () => {
+    navigator.clipboard.writeText(trimmed)
+      .then(() => console.log("Copied:", trimmed))
+      .catch(err => console.error("Copy failed", err));
+  });
+
+  wrapper.append(para, btn);
+  storyBox.appendChild(wrapper);
+});
+
+
+  // 7) title sync + navigation helpers + copyStory
+  const title = "Tainted Spring: Introduction";
+  document.getElementById("pageTitle").innerText   = title;
+  document.getElementById("promptTitle").innerText = title;
+
+  function goToFix()    { window.location.href = `fix.html?${params}`; }
+  function goToPage(pg){ window.location.href = `${pg}.html?${params}`; }
+
+  function copyStory(){
+    navigator.clipboard.writeText(storyText)
+      .then(() => alert("Story copied!"))
+      .catch(() => alert("Copy failed."));
+  }
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.copy-break').forEach(container => {
+    const delimiter = container.dataset.delimiter;
+    const raw       = container.textContent;
+    const parts     = raw.split(delimiter);
+
+    container.innerHTML = ''; // clear out the raw text
+
+    parts.forEach(text => {
+      const segment = text.trim();
+      if (!segment) return;  // skip empty splits
+
+      // wrapper for each piece
+      const wrapper = document.createElement('div');
+      wrapper.className = 'copy-segment';
+
+      // the text block
+      const pre = document.createElement('pre');
+      pre.textContent = segment;
+
+      // the copy button
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = 'Copy';
+btn.addEventListener('click', () => {
+  navigator.clipboard.writeText(segment)
+    .then(() => {
+      alert("Story copied!");
+    })
+    .catch(() => {
+      alert("Copy failed.");
+    });
+});
+
+
+      wrapper.append(pre, btn);
+      container.appendChild(wrapper);
+    });
+  });
+});
+</script>
+</body>
+</html>

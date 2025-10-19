@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title id="pageTitle">Multiplayer Prompt</title>
+  <link rel="stylesheet" href="../../style.css">
+  <style>
+/* container and segment sizing */
+.story {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.story-segment {
+  background: #676767;            /* match your dark box look if needed */
+  color: #eee;
+  border-radius: 6px;
+  padding: 1rem;
+  margin: 0.75rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+/* preserve newlines but allow wrapping so lines don't grow horizontally */
+.story-segment pre {
+  white-space: pre-wrap;      /* preserves newlines and allows wrapping */
+  word-break: break-word;
+  margin: 0;
+  font-family: serif;         /* match your aesthetic from template */
+  line-height: 1.4;
+  max-height: 240px;          /* limit visible height */
+  overflow: auto;             /* enable internal scrolling if needed */
+  padding-right: 0.25rem;     /* room for scrollbar */
+}
+
+/* keep the copy button sized and aligned */
+.story-segment .storyButton {
+  align-self: flex-end;
+  padding: 0.35rem 0.8rem;
+  font-size: 0.95rem;
+  border-radius: 6px;
+  width: auto;
+  min-width: 72px;
+background-color: #303030;
+}
+
+
+    .button-group {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: auto;
+    }
+    #copyBuffer {
+      position: absolute;
+      left: -9999px;
+    }
+    .option-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      margin-top: 30px;
+    }
+    .option-box {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background: #676767;
+      border: 2px solid #303030;
+      border-radius: 8px;
+      padding: 15px;
+      text-align: left;
+      min-height: 280px;
+    }
+    .option-box h3 {
+      margin-top: 0;
+      color: #ffffff;
+    }
+    .option-box p {
+      margin: 8px 0;
+    }
+    .result-box {
+      display: none;
+      margin-top: 30px;
+      background: #676767;
+      border: 2px solid #303030;
+      border-radius: 8px;
+      padding: 20px;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+      text-align: left;
+    }
+    .result-box h3 {
+      margin-top: 0;
+      color: #ffffff;
+    }
+    #resultActions {
+      margin: 15px 0;
+    }
+	button{
+		color: white;
+}
+.option-grid{
+	background-color: #303030;
+	padding: 20px;
+}
+.option-box button{
+	background-color: #303030;
+}
+
+/* container: place buttons side-by-side */
+.button-group, #resultActions{
+  display: flex;
+  gap: 10px;
+  align-items: stretch; /* ensure children fill cross axis */
+}
+
+/* make every button share space and have identical height */
+.button-group .storyButton, #resultActions button{
+  flex: 1 1 0;         /* grow and shrink equally, no base width bias */
+  min-width: 0;        /* allow proper shrinking inside grid */
+  box-sizing: border-box;
+  height: 48px;        /* fixed height so all match exactly */
+  padding: 0 1rem;     /* horizontal padding only (vertical controlled by height) */
+  display: inline-flex;
+  align-items: center; /* center label vertically */
+  justify-content: center;
+  border-radius: 8px;
+background-color: #303030;
+}
+
+.option-box hr{
+  border: none;
+  height: 1px;
+  background: #ccc;        /* line color */
+  margin: 0;          /* spacing */
+  display: block;  
+}
+
+  </style>
+</head>
+<body class="prompt">
+<article>
+<div class="container">
+
+<img src="https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/i/71515031-3f45-4117-abcd-a4fc1856b7d7/d6501sy-73956cdd-e523-4ac3-9b77-6d2c6ca2bab7.gif">
+  <div>
+  <h2 id="promptTitle"></h2>
+  <p>By Tenshilove</p>
+</div>
+<img src="https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/i/71515031-3f45-4117-abcd-a4fc1856b7d7/d6501sy-73956cdd-e523-4ac3-9b77-6d2c6ca2bab7.gif">
+
+</div>
+
+<hr>
+
+  <div id="customDisplay"></div>
+  <button class="storyButton" onclick="goToFix()">Fix Parameters</button>
+  <button class="storyButton" onclick="goToPage('index')">To Index</button>
+
+  <div class="story">
+    <div id="storyBox"></div>
+    <button class="storyButton" onclick="copyStory()">Copy Story</button>
+  </div>
+
+  <div class="option-grid" id="optionGrid"></div>
+
+  <div class="result-box" id="resultBox">
+    <h3 id="resultTitle"></h3>
+    <p id="resultText"></p>
+    <div id="resultActions"></div>
+  </div>
+
+  <textarea id="copyBuffer"></textarea>
+</article>
+
+<script>
+  // 0) pull URL params
+  const params = new URLSearchParams(window.location.search);
+
+  // 1) simple casing helpers
+  const lc  = s => (s||"").toLowerCase();
+  const cap = s => (s||"")[0]?.toUpperCase() + (s||"").slice(1);
+
+  // 2) pronounSet → flat keys your template expects
+  function pronounSet(subj) {
+    subj = lc(subj);
+    switch (subj) {
+      case "she":  return { HeSheThey:"she", HimHerThem:"her", HisHerTheir:"her", HisHersTheirs:"hers", WasWere:"was", DoesDo:"does", HasHave:"has" };
+      case "he":   return { HeSheThey:"he",  HimHerThem:"him",  HisHerTheir:"his",  HisHersTheirs:"his", WasWere:"was",  DoesDo:"does", HasHave:"has" };
+      case "they": return { HeSheThey:"they",HimHerThem:"them",HisHerTheir:"their",HisHersTheirs:"theirs",WasWere:"were", DoesDo:"do",  HasHave:"have" };
+      default:     return { HeSheThey:"it",  HimHerThem:"it",   HisHerTheir:"its", HisHersTheirs:"its", WasWere:"was",  DoesDo:"does", HasHave:"has" };
+    }
+  }
+
+  // 3) ensure we got all params
+  const required = [];
+  for (let i = 1; i <= 4; i++) {
+    required.push(
+      `Player${i}Name`,
+      `Player${i}HeSheThey`,
+      `Player${i}Class`,
+      `Player${i}Weapon`,
+      `Player${i}Damage`
+    );
+  }
+  if (required.some(k => !params.get(k))) {
+    window.location.href = `fix.html?${params}`;
+  }
+
+  // 4) define real globals for Player1…Player4
+  const players = [];
+  for (let i = 1; i <= 4; i++) {
+    const rawName  = params.get(`Player${i}Name`)    || "";
+    const rawPron  = params.get(`Player${i}HeSheThey`)|| "";
+    const rawClass = params.get(`Player${i}Class`)   || "";
+    const rawWeap  = params.get(`Player${i}Weapon`)  || "";
+    const rawDmg   = params.get(`Player${i}Damage`)  || "";
+
+    const Name      = cap(lc(rawName));
+    const HeSheThey = lc(rawPron);
+    const Class     = cap(lc(rawClass));
+    const Weapon    = cap(lc(rawWeap));
+    const Damage    = lc(rawDmg);
+
+    const pfx = pronounSet(HeSheThey);
+
+    // expose as globals
+    window[`Player${i}Name`]          = Name;
+    window[`Player${i}HeSheThey`]     = pfx.HeSheThey;
+    window[`Player${i}HimHerThem`]    = pfx.HimHerThem;
+    window[`Player${i}HisHerTheir`]   = pfx.HisHerTheir;
+    window[`Player${i}HisHersTheirs`] = pfx.HisHersTheirs;
+    window[`Player${i}WasWere`]       = pfx.WasWere;
+    window[`Player${i}DoesDo`]        = pfx.DoesDo;
+    window[`Player${i}HasHave`]       = pfx.HasHave;
+    window[`Player${i}Class`]         = Class;
+    window[`Player${i}Weapon`]        = Weapon;
+    window[`Player${i}Damage`]        = Damage;
+
+    // also collect into players[] for the top display
+    players.push({Name, HeSheThey, Class, Weapon, Damage});
+  }
+
+  // 5) render the top summary
+  document.getElementById("customDisplay").innerHTML =
+    players.map((p, i) =>
+      `<strong>Player ${i+1}:</strong> ${p.Name} — 
+       <em>${p.HeSheThey}</em> | Class: ${p.Class} | Weapon: ${p.Weapon} | Damage: ${p.Damage}`
+    ).join("<br>");
+
+  // --- NEW: storyText with delimiter and per-segment copy buttons ---
+  const storyText = `The intrepid adventurers continued through the forest. It felt like an endless trudge through brush and brambles. Just as ${Player3Name} began to complain about a rogue pine needle in ${Player3HisHerTheir} hooves, the trees parted like a stage curtain revealing a spectacular, unexpected vision.
+
+Before them lay a glen, a riotous explosion of color. Flowers of various hues – blues, oranges, purples – stretched across the clearing, undulating gently in a subtle breeze. A startled deer, mid-sniff of a particularly plump daisy, bolted, followed by a trio of fluffy bunny rabbits who bounced away like oversized popcorn.
+
+“Woah,” ${Player2Name} breathed, ${Player2HisHerTheir} hand going to ${Player2HisHerTheir} heart. “It’s…it’s like someone spilled a rainbow.”
+
+${Player1Name} squinted. “Odd, isn’t it? The river feeding this whole region’s been tainted. You’d think even the weeds would be looking a bit peaky, let alone this abundant glen.”
+
+Just then, a dazzling violet butterfly, with wings like stained glass, gracefully fluttered down and landed squarely on ${Player4Name}’s outstretched index finger. ${cap(Player4HeSheThey)} gasped, barely daring to breathe. “Oh, you beautiful thing!”
+
+${Player2Name}, however, leaned forward, sniffing the air cautiously. “Okay, but… aren’t these too perfect? And what’s with the smell? It’s like a thousand grandgoats all baked lavender cakes at once.”
+
+${Player3Name}, still picking at ${Player3HisHerTheir} hoof, yawned. “Relax, ${Player2Name}. It’s just a glen. A very, very pretty glen. You’re always looking for traps. Not everything’s a mimic or a goblin with a cleverly disguised booby-trap-flower.”
+
+They dismissed ${Player2Name}’s suspicions as nonsense, mostly because the sheer beauty was overwhelming. With a collective shrug, they ventured into the floral wonderland. As they walked, their hooves crunched on fallen petals, kicking up clouds of shimmering pollen and fine, sweet-smelling dust.
+
+The air grew heavy, thick with the cloying perfume of a thousand blossoms. An unusual weariness began to settle over the group. ${Player4Name}, who had started the day with a mere four hours of sleep thanks to the uncomfortable beds at the tavern, was the first to succumb. ${cap(Player4HeSheThey)} yawned so wide ${Player4HisHerTheir} jaw cracked, ${Player4HisHerTheir} eyelids drooping like old window blinds. ${Player3Name} rubbed ${Player3HisHerTheir} eyes, feeling an inexplicable urge to curl up right there. ${Player2Name} felt a powerful need for a nap.
+
+“You know,” ${Player1Name} mumbled, ${Player1HisHerTheir}  voice thick, “The accommodations at the Whispering Willow were surprisingly lumpy last night. And these… these laurels look so soft. Just five minutes, maybe? A power nap?”
+
+${Player4Name} felt a prickle of alarm cut through the growing fog in ${Player4HisHerTheir} brain. This wasn’t peaceful tiredness; this was unnatural. “Wait a minute, herd,” ${Player4HeSheThey}  said, trying to inject urgency into ${Player4HisHerTheir} voice, which came out as more of a drowsy murmur. “This feels wrong. Very wrong. This could be some kind of… magical sleep trap! Like those soporific snapdragons from the Raven Wastes!”
+
+${Player3Name} yawned. “Soporific snapdragons don’t smell like a fairy’s dwelling, ${Player4Name}. Besides, a quick snooze won’t hurt. We could use the rest.” ${cap(Player3HeSheThey)} ${Player3WasWere} already eyeing a particularly plush patch of azure blooms.
+
+Before ${Player4Name} could protest further, ${Player1Name} had simply… keeled over. A soft thump amidst the petals, followed by a gentle, rhythmic snore that immediately added a deeply comical bass line to the sweet serenade of the blooming glen.
+`.trim();
+
+  // split into segments and render them with copy buttons
+  const delimiter = "←—------------------- copy break—----------------->";
+  const segments  = storyText.split(delimiter);
+  const storyBox  = document.getElementById("storyBox");
+
+  storyBox.innerHTML = ""; // clear
+
+  segments.forEach((text) => {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "story-segment";
+
+    const pre = document.createElement("pre");
+    pre.textContent = trimmed;
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.textContent = "Copy";
+    btn.className = "storyButton";
+    btn.addEventListener("click", () => {
+      navigator.clipboard.writeText(trimmed)
+        .then(() => {
+          btn.textContent = "Copied!";
+          setTimeout(() => btn.textContent = "Copy", 1200);
+        })
+        .catch(() => {
+          btn.textContent = "Copy failed";
+          setTimeout(() => btn.textContent = "Copy", 1200);
+        });
+    });
+
+    wrapper.append(pre, btn);
+    storyBox.appendChild(wrapper);
+  });
+
+  // 7) actions & UI (unchanged from your template2)
+  const actions = [
+    {
+      name:      "Take a Nap",
+      condition: "Always available",
+      prompt:    `The long day’s journey weighed heavily on the adventurers, making their eyelids droop with fatigue. "We’ve been walking for hours," mumbled ${Player4Name}, wiping sweat from ${Player4HisHerTheir} brow. "Surely, a small rest is deserved."
+${Player3Name} immediately agreed, noting how inviting the sprawling field looked. "The clovers here are incredibly soft and comfy," ${Player3HeSheThey} observed. 
+
+A little nap amid the beautiful flowers couldn't possibly cause any harm.`,
+      result:    `One by one, they laid down their packs, sinking into the fragrant blossoms. Feeling the warm sun shine pleasantly on their faces, they quickly succumbed to exhaustion and drifted into a peaceful, deep sleep.`,
+      next:      { label: "Continue", url: "i" }
+    },
+    {
+      name:      "Fight it off",
+      condition: "Always Available",
+      prompt:    `The sun beat down as the sudden, heavy lethargy struck the group. "We deserve a quick rest in these beautiful flowers," ${Player1Name} murmured, already leaning into the soft petals. The field seemed to beckon them.
+Immediately, ${Player2Name} felt uneasy. "This unusual sleepiness is coming on too quickly,"${Player2HeSheThey} insisted. The butterflies and gentle warmth felt eerily like a sophisticated trap designed to subdue them.`,
+      result:    `50/50 chance for results
+
+Hearing ${Player2HimHerThem} out, the aries agreed, "This is no time to sleep; we're on a quest," said ${Player3Name}. They fought the urge, linking arms to keep walking, determinedly battling the magical stupor together.
+
+Working as one, they trudged through the oppressive field and back into the shadow of the dark forest. As the flowery air receded, the overwhelming drowsiness quickly passed. "It most certainly was magical," ${Player4Name} confirmed.
+
+Relieved, they continued their journey. When ${Player1Name} stretched and let out a noisy yawn, the others froze in panic. ${cap(Player1HeSheThey)} laughed quickly, "I’m just messing with you guys!" 
+
+They all shared a relieved chuckle before moving on.
+
+
+Hearing this concern, the drowsy group agreed. "This is no time to sleep," ${Player4Name} declared, remembering their important quest. They tried their best to shake off the strange, heavy sensation and remain alert together.
+They valiantly fought the encroaching slumber. However, ${Player1Name} had already succumbed, deep in sleep. The others teetered on the brink of unconsciousness, their eyelids growing heavy with each passing moment, despite their determination.
+${Player2Name}  tried desperately to pull ${Player2HisHerTheir} herd from the field. But the task was too overwhelming, and ${Player2HeSheThey} too soon gave in. ${cap(Player2HeSheThey)} succumbed to the powerful, mysterious spell, falling into a serene slumber amongst the flowers.
+
+
+The adventurers had succumbed to the drowsy embrace of the enchanted flower field. Their slumber was a deep and peaceful oblivion that rendered them utterly unaware of the subtle magic stirring around them. One by one, then in a chorus of rustling petals, the flowers began to awaken. Tiny blooms, imbued with a natural magic, wriggled beneath each slumbering form, lifting them gently onto their vibrant, pulsing petals. Like a living procession, they were carried through the colorful field, a floral march towards a small, dimly lit hovel nestled at the edge of the glen.
+
+A shiver ran through ${Player1Name}. ${cap(Player1HisHerTheir)} eyes fluttered open, then widened in bewildered confusion. Beside ${Player1HimHerThem},  ${Player2Name} grunted and stirred. ${Player3Name} let out a soft, surprised gasp as the petals beneath ${Player3HimHerThem} shifted. A disbelieving grin spread across  ${Player4Name}’s face as ${Player4HeSheThey} realized ${Player4HeSheThey} and ${Player4HisHerTheir} companions were being transported by a floral escort.
+
+As the adventurers fully awakened, a collective gasp rippled through the group. The flowers, startled by their sudden awareness, scattered and retreated with a surprising swiftness, leaving them standing on the damp earth.
+
+“What in the blazes just happened?” ${Player1Name} boomed, dusting ${Player1HimHerThem}  self off with a bewildered frown.
+
+“I think,” ${Player4Name} chirped, a mischievous glint in  ${Player4HisHerTheir}  eye, “we’ve been flower-napped!”
+
+They looked around, taking in their surroundings. They had been carried off to an unfamiliar part of the forest. Those playful sprites pulled a fast one on them. Maybe they were trying to take them somewhere specific, but their untimely awakening spooked them too early, or perhaps they were just playing a prank on the poor adventurers. Either way they had no choice but to gather their bearings and continue on towards the spring. At least they were able to get a little refreshment from the short nap.
+
+`,
+      next: [
+        { label: "Sleep",    url: "i" },
+        { label: "Stay Awake", url: "l" }
+      ]
+    },
+    {
+      name:      "Use Bucket",
+      condition: "Requires item: Bucket",
+      prompt:    `A heavy weariness settled upon the adventurers amidst the vibrant, sweet-smelling flowers. "Wake up, ${Player1Name}!"  ${Player4Name} declared, valiantly fighting the pervasive urge to sleep, just as ${Player3Name} remembered the bucket they carried and the nearby stream. Perhaps some cold water could help.
+`,
+      result:    `With a sleepy resolve, ${Player3Name} took the bucket from their pack, and  trudged to the water, splashing ${Player2HisHerTheir} face with the icy cold stream. The sudden shock cleared ${Player2HisHerTheir} mind, and a chilling realization dawned: this peculiar drowsiness felt unnaturally strong, almost magical.
+Quickly, ${Player2HeSheThey} filled the bucket again, dousing their friends, who gasped awake as the enchantment lifted. "The flowers must be causing us to sleep! " ${Player4Name} cried, 
+“We need to run!” ${Player2Name} says, sprinting across the field, trying to avoid the pollen.
+The adventurers burst into the welcoming shade of the woods, far from the deceptive blossoms. As they continued deeper into the forest, the oppressive, magical drowsiness completely vanished, leaving them feeling refreshed and ready for whatever else these woods had in store for them.
+`,
+      next:      { label: "Continue", url: "l" }
+    },
+    {
+      name:      "Water Spell",
+      condition: "Requires mage with water spell",
+      prompt:    `The air was thick with the scent of vibrant pollen, and despite the immediate danger, ${Player1Name} was already gently dozing off right among the sprawling flowers. "We can't rest now, we have a quest to finish!" ${Player2Name} insisted, ${Player2HisHerTheir} voice thick with an exhaustion that felt unnatural and potent.
+
+The mage, {MAGE}, realized {MAGEHeSheThey} could wake {MAGEHisHerTheir} allies with a quick water spell. It may be a waste of mana but otherwise they’d be stuck asleep in this field.`,
+      result:    ` Hoisting {MAGEHisHerTheir} wand high, {MAGE} conjured a quick, icy splash of water, instantly startling {MAGEHimHerThem} self and {MAGEHisHerTheir} dangerously drowsy herd completely awake mid-yawn.
+The sudden cold banished the magical sleepiness, confirming it was no natural slumber. "The flowers must be causing this!" ${Player4Name} shouted. The Aries began to immediately sprint across the dangerous field, thankfully making it to the protective shadows of the nearby woods where the drowsiness finally vanished.`,
+      next:      { label: "Continue", url: "l" }
+    },
+    {
+      name:      "Use Bedroll",
+      condition: "Requires item: Bedroll",
+      prompt:    `One adventurer was already slumped over, nodding off right where he stood among the colorful, warm flowers. "We’ve been walking all day; we have time to kill," a friend chuckled, signaling an immediate and welcome pause.
+
+Another adventurer laid back immediately, suggesting a small snooze, but a third insisted, "If we are going to rest, let's at least lay out a bedroll."
+`,
+      result:    `Everyone quickly agreed, pulling their worn canvas rolls from their packs for a deliberate rest.
+
+They arranged their bedrolls side-by-side, snuggling close in the warm sunlight. The adventurers soon surrendered to deep slumber amidst the fragrant blossoms, utterly unaware of the silent peril lurking just beyond the flowered meadow.
+
+
+The adventurers had succumbed to the drowsy embrace of the enchanted flower field. Their slumber was a deep and peaceful oblivion that rendered them utterly unaware of the subtle magic stirring around them. One by one, then in a chorus of rustling petals, the flowers began to awaken. Tiny blooms, imbued with a natural magic, wriggled beneath each slumbering form, lifting them gently onto their vibrant, pulsing petals. Like a living procession, they were carried through the colorful field, a floral march towards a small, dimly lit hovel nestled at the edge of the glen.
+
+A shiver ran through ${Player1Name}. ${cap(Player1HisHerTheir)} eyes fluttered open, then widened in bewildered confusion. Beside ${Player1HimHerThem},  ${Player2Name} grunted and stirred. ${Player3Name} let out a soft, surprised gasp as the petals beneath ${Player3HimHerThem} shifted. A disbelieving grin spread across  ${Player4Name}’s face as ${Player4HeSheThey} realized ${Player4HeSheThey} and ${Player4HisHerTheir} companions were being transported by a floral escort.
+
+As the adventurers fully awakened, a collective gasp rippled through the group. The flowers, startled by their sudden awareness, scattered and retreated with a surprising swiftness, leaving them standing on the damp earth.
+
+“What in the blazes just happened?” ${Player1Name} boomed, dusting ${Player1HimHerThem}  self off with a bewildered frown.
+
+“I think,” ${Player4Name} chirped, a mischievous glint in  ${Player4HisHerTheir}  eye, “we’ve been flower-napped!”
+
+They looked around, taking in their surroundings. They had been carried off to an unfamiliar part of the forest. Those playful sprites pulled a fast one on them. Maybe they were trying to take them somewhere specific, but their untimely awakening spooked them too early, or perhaps they were just playing a prank on the poor adventurers. Either way they had no choice but to gather their bearings and continue on towards the spring. At least they were able to get a little refreshment from the short nap.
+
+`,
+      next:      { label: "Continue", url: "i" }
+    },
+    {
+      name:      "Campfire with magic",
+      condition: "Requires mage with firespell and mana to cast it",
+      prompt:    `${Player1Name} was already slumped over, nodding off right where ${Player1HeSheThey} stood among the colorful, warm flowers. "We’ve been walking all day; we have time to kill," ${Player2Name}  chuckled, signaling an immediate and welcome pause.
+
+${Player4Name} laid back immediately, suggesting a small snooze, but ${Player3Name} insisted, "If we are going to rest, let's at least lay out a bedroll." 
+`,
+      result:    `Everyone quickly agreed, pulling their worn bedrolls from their packs for a deliberate rest.
+
+They arranged their bedrolls side-by-side, snuggling close in the warm sunlight. The adventurers soon surrendered to deep slumber amidst the fragrant blossoms, utterly unaware of the silent peril lurking just beyond the flowered meadow.
+
+
+
+The adventurers had succumbed to the drowsy embrace of the enchanted flower field. Their slumber was a deep and peaceful oblivion that rendered them utterly unaware of the subtle magic stirring around them. One by one, then in a chorus of rustling petals, the flowers began to awaken. Tiny blooms, imbued with a natural magic, wriggled beneath each slumbering form, lifting them gently onto their vibrant, pulsing petals. Like a living procession, they were carried through the colorful field, a floral march towards a small, dimly lit hovel nestled at the edge of the glen.
+
+A shiver ran through ${Player1Name}. ${cap(Player1HisHerTheir)} eyes fluttered open, then widened in bewildered confusion. Beside ${Player1HimHerThem},  ${Player2Name} grunted and stirred. ${Player3Name} let out a soft, surprised gasp as the petals beneath ${Player3HimHerThem} shifted. A disbelieving grin spread across  ${Player4Name}’s face as ${Player4HeSheThey} realized ${Player4HeSheThey} and ${Player4HisHerTheir} companions were being transported by a floral escort.
+
+As the adventurers fully awakened, a collective gasp rippled through the group. The flowers, startled by their sudden awareness, scattered and retreated with a surprising swiftness, leaving them standing on the damp earth.
+
+“What in the blazes just happened?” ${Player1Name} boomed, dusting ${Player1HimHerThem}  self off with a bewildered frown.
+
+“I think,” ${Player4Name} chirped, a mischievous glint in  ${Player4HisHerTheir}  eye, “we’ve been flower-napped!”
+
+They looked around, taking in their surroundings. They had been carried off to an unfamiliar part of the forest. Those playful sprites pulled a fast one on them. Maybe they were trying to take them somewhere specific, but their untimely awakening spooked them too early, or perhaps they were just playing a prank on the poor adventurers. Either way they had no choice but to gather their bearings and continue on towards the spring. At least they were able to get a little refreshment from the short nap.
+
+`,
+      next:      { label: "Continue", url: "i" }
+    },
+    {
+      name:      "Campfire with firestarter",
+      condition: "Requires item: Lantern",
+      prompt:    `The air was thick with sudden fatigue. "We can't rest now, a quest awaits!" insisted ${Player1Name}, but ${Player2Name}  was already sprawled among the tall, colorful flowers. "I don't like this feeling; something feels wrong," muttered ${Player3Name}, struggling to keep ${Player3HisHerTheir} eyes open.
+“We could protect ourselves with a fire, to keep any lurkers away from us,” ${Player2Name} offers. “The lantern can be used to light tinder.”
+`,
+      result:    `Agreeing that protection was necessary, they decided on a campfire to ward off any lurking creatures. Groggily, they gathered a few dry twigs and scattered rocks, movements heavy with impossible weariness.
+
+${Player2Name} took the lantern and lit it, then used a small bit of tinder to catch the flame. With a toss the rest of the campfire lit up quickly. The warm, flickering light felt instantly safe. Huddling close to the cheerful flame, the exhausted adventurers finally surrendered to the sudden, overwhelming sleep.
+
+The small fire had done its job perfectly. As the morning sun crested the trees, ${Player4Name}  sat up, stretching with genuine restoration. ${cap(Player4HeSheThey)} quickly roused the others, and feeling completely refreshed, they extinguished the embers and happily continued their adventure.
+
+
+The adventurers had succumbed to the drowsy embrace of the enchanted flower field. Their slumber was a deep and peaceful oblivion that rendered them utterly unaware of the subtle magic stirring around them. One by one, then in a chorus of rustling petals, the flowers began to awaken. Tiny blooms, imbued with a natural magic, wriggled beneath each slumbering form, lifting them gently onto their vibrant, pulsing petals. Like a living procession, they were carried through the colorful field, a floral march towards a small, dimly lit hovel nestled at the edge of the glen.
+
+A shiver ran through ${Player1Name}. ${cap(Player1HisHerTheir)} eyes fluttered open, then widened in bewildered confusion. Beside ${Player1HimHerThem},  ${Player2Name} grunted and stirred. ${Player3Name} let out a soft, surprised gasp as the petals beneath ${Player3HimHerThem} shifted. A disbelieving grin spread across  ${Player4Name}’s face as ${Player4HeSheThey} realized ${Player4HeSheThey} and ${Player4HisHerTheir} companions were being transported by a floral escort.
+
+As the adventurers fully awakened, a collective gasp rippled through the group. The flowers, startled by their sudden awareness, scattered and retreated with a surprising swiftness, leaving them standing on the damp earth.
+
+“What in the blazes just happened?” ${Player1Name} boomed, dusting ${Player1HimHerThem}  self off with a bewildered frown.
+
+“I think,” ${Player4Name} chirped, a mischievous glint in  ${Player4HisHerTheir}  eye, “we’ve been flower-napped!”
+
+They looked around, taking in their surroundings. They had been carried off to an unfamiliar part of the forest. Those playful sprites pulled a fast one on them. Maybe they were trying to take them somewhere specific, but their untimely awakening spooked them too early, or perhaps they were just playing a prank on the poor adventurers. Either way they had no choice but to gather their bearings and continue on towards the spring. At least they were able to get a little refreshment from the short nap.
+
+`,
+      next:      { label: "Continue", url: "i" }
+    }
+  ];
+
+  const grid     = document.getElementById("optionGrid");
+  const resBox   = document.getElementById("resultBox");
+  const resTitle = document.getElementById("resultTitle");
+  const resText  = document.getElementById("resultText");
+  const resAct   = document.getElementById("resultActions");
+
+  actions.forEach((act, idx) => {
+    const box = document.createElement("div");
+    box.className = "option-box";
+    box.innerHTML = `
+      <h3>${act.name}</h3>
+	<hr>
+      <p><strong>Condition:</strong> ${act.condition}</p>
+      <p>${act.prompt}</p>
+      <div class="button-group">
+        <button class="storyButton" onclick="showResult(${idx})">Proceed</button>
+        <button class="storyButton" onclick="copyPrompt(${idx})">Copy Prompt</button>
+      </div>
+    `;
+    grid.appendChild(box);
+  });
+
+  function showResult(idx) {
+    const act = actions[idx];
+    resTitle.innerText = `Result: ${act.name}`;
+    resText.innerText  = act.result;
+    resAct.innerHTML   = "";
+
+    const nexts = Array.isArray(act.next) ? act.next : [act.next];
+    nexts.forEach(({label, url}) => {
+      const btn = document.createElement("button");
+      btn.className = "storyButton";
+      btn.innerText = label;
+      btn.onclick   = () => goToPage(url);
+      resAct.appendChild(btn);
+    });
+
+    const copyBtn = document.createElement("button");
+    copyBtn.className = "storyButton";
+    copyBtn.innerText = "Copy Result";
+    copyBtn.onclick   = copyResult;
+    resAct.appendChild(copyBtn);
+
+    resBox.style.display = "block";
+  }
+
+  function copyPrompt(idx) {
+    navigator.clipboard.writeText(actions[idx].prompt)
+      .then(() => alert("Prompt copied!"))
+      .catch(() => alert("Copy failed."));
+  }
+
+  function copyResult() {
+    navigator.clipboard.writeText(resText.innerText)
+      .then(() => alert("Result copied!"))
+      .catch(() => alert("Copy failed."));
+  }
+
+  const title = "Tainted Spring: Flower Field";
+  document.getElementById("pageTitle").innerText   = title;
+  document.getElementById("promptTitle").innerText = title;
+
+  function goToFix()    { window.location.href = `fix.html?${params}`; }
+  function goToPage(pg){ window.location.href = `${pg}.html?${params}`; }
+
+  // copy full story text
+  function copyStory(){
+    navigator.clipboard.writeText(storyText)
+      .then(() => alert("Story copied!"))
+      .catch(() => alert("Copy failed."));
+  }
+</script>
+
+</body>
+</html>
+
